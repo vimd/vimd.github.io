@@ -6,14 +6,28 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://vimd.github.io">
-  <title>Archives | Hexo</title>
+  <title>Linux0.00内核编译 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="https://vimd.github.io/archives/index.html">
+  <meta name="description" content="&amp;emsp;&amp;emsp;一直以来都很浮躁，不能静下心来学习，但是“知其然，而不知其所以然”的状态又很让我不安，经常处在这样的矛盾之中。从小就很崇拜科学家和技术很厉害的人，而我也知道，对事物认识的深度决定了所能达到的高度，只是没有这样的恒心去坚持 。这次又燃起了三分钟学习的热度，不知道何时会退却，如果能在这个热度前加个限期，我希望是：死循环。 &amp;emsp;&amp;emsp;最近在看赵炯的《Linux内核完">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux0.00内核编译">
+<meta property="og:url" content="https://vimd.github.io/2017-07-01-Linux0-0内核编译.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="&amp;emsp;&amp;emsp;一直以来都很浮躁，不能静下心来学习，但是“知其然，而不知其所以然”的状态又很让我不安，经常处在这样的矛盾之中。从小就很崇拜科学家和技术很厉害的人，而我也知道，对事物认识的深度决定了所能达到的高度，只是没有这样的恒心去坚持 。这次又燃起了三分钟学习的热度，不知道何时会退却，如果能在这个热度前加个限期，我希望是：死循环。 &amp;emsp;&amp;emsp;最近在看赵炯的《Linux内核完">
+<meta property="og:image" content="https://vimd.github.io/2017-07-01-Linux0-0内核编译.html/1.jpeg">
+<meta property="og:image" content="https://vimd.github.io/2017-07-01-Linux0-0内核编译.html/2.jpeg">
+<meta property="og:image" content="https://vimd.github.io/2017-07-01-Linux0-0内核编译.html/3.jpeg">
+<meta property="og:image" content="https://vimd.github.io/2017-07-01-Linux0-0内核编译.html/4.jpeg">
+<meta property="og:image" content="https://vimd.github.io/2017-07-01-Linux0-0内核编译.html/5.jpeg">
+<meta property="og:image" content="https://vimd.github.io/2017-07-01-Linux0-0内核编译.html/6.jpeg">
+<meta property="og:image" content="https://vimd.github.io/2017-07-01-Linux0-0内核编译.html/7.jpeg">
+<meta property="og:image" content="https://vimd.github.io/2017-07-01-Linux0-0内核编译.html/8.jpeg">
+<meta property="og:image" content="https://vimd.github.io/2017-07-01-Linux0-0内核编译.html/9.jpeg">
+<meta property="og:updated_time" content="2017-07-01T14:04:17.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hexo">
+<meta name="twitter:title" content="Linux0.00内核编译">
+<meta name="twitter:description" content="&amp;emsp;&amp;emsp;一直以来都很浮躁，不能静下心来学习，但是“知其然，而不知其所以然”的状态又很让我不安，经常处在这样的矛盾之中。从小就很崇拜科学家和技术很厉害的人，而我也知道，对事物认识的深度决定了所能达到的高度，只是没有这样的恒心去坚持 。这次又燃起了三分钟学习的热度，不知道何时会退却，如果能在这个热度前加个限期，我希望是：死循环。 &amp;emsp;&amp;emsp;最近在看赵炯的《Linux内核完">
+<meta name="twitter:image" content="https://vimd.github.io/2017-07-01-Linux0-0内核编译.html/1.jpeg">
   
     <link rel="alternative" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -129,37 +143,74 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-Linux0-0内核编译" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2017" class="archive-year">2017</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017-07-01-Linux0-0内核编译.html" class="archive-article-date">
-  	<time datetime="2017-07-01T09:43:42.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-07-01</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017-07-01-Linux0-0内核编译.html">Linux0.00内核编译</a>
+    <h1 class="article-title" itemprop="name">
+      Linux0.00内核编译
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
-          
+        
+        <a href="/2017-07-01-Linux0-0内核编译.html" class="archive-article-date">
+  	<time datetime="2017-07-01T09:43:42.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-07-01</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>&emsp;&emsp;一直以来都很浮躁，不能静下心来学习，但是“知其然，而不知其所以然”的状态又很让我不安，经常处在这样的矛盾之中。从小就很崇拜科学家和技术很厉害的人，而我也知道，对事物认识的深度决定了所能达到的高度，只是没有这样的恒心去坚持 。这次又燃起了三分钟学习的热度，不知道何时会退却，如果能在这个热度前加个限期，我希望是：死循环。</p>
+<p>&emsp;&emsp;最近在看赵炯的《Linux内核完全剖析》，第四章给出了一个简单的内核代码，据说这是当年Linus写的第一个版本的代码，不过因为意外在江湖上失传了，就没有了原版的Linux－0.00版本的内核了，书中的代码是作者自己写的。好吧，言归正传，就讲讲最近几天编译这个内核学到的东西，其实我不太愿意写这样的文字，但是好记性不如烂笔头，先记下免得以后忘记。这里有一篇文章讲的挺好的：<a href="http://blog.csdn.net/qaz19870418/article/details/6049147" target="_blank" rel="external">http://blog.csdn.net/qaz19870418/article/details/6049147</a> ,我只做一些补充性的说明。</p>
+<a id="more"></a>
+<p>&emsp;&emsp;古人云：工欲善其事，必先利其器。准备工作还是要做好的。首先是代码，这个可以到这里<a href="http://oldlinux.org/Linux.old/bochs/linux-0.00-050613.zip" target="_blank" rel="external">下载</a> 。我的代码是自己敲的，本来是要体现自己的决心，结果把一个0f敲成了f0，花了我好几个小时才找到问题。</p>
+<p>&emsp;&emsp;源代码之一的boot.s是用Intel语法写的，因此要使用as86和ld86来进行汇编和链接。我使用的是Ubuntu 10.04，在Synaptic Package Manager中找到了bin86，这个里面含有上面两个工具的，所以安装bin86就好了。至于as和ld这两个工具，Linux自带的都有的。最后还需要一个虚拟机来跑这个内核，我使用的是bochs。这个也可以在Synaptic Package Manager中找到，另外还要安装bochs-x。我比较菜，而且很懒，所以就使用这种图形化的安装方法，也可以使用命令行安装的，自己搜索吧。</p>
+<p>&emsp;&emsp;上面完成之后就可以开始编译了，那个压缩包里有Makefile文件的，不过我没有用，而是自己手动编译的，毕竟只有两个源文件。首先是编译boot.s文件，使用如下的命令：<br><img src="/2017-07-01-Linux0-0内核编译.html/1.jpeg" alt="1.jpeg" title=""></p>
+<p>&emsp;&emsp;不过，这个文件是我从书上抄的，书上有一条语句是这样的“rep movw“，这个要分开两行的，不然会报错的，如下：<br><img src="/2017-07-01-Linux0-0内核编译.html/2.jpeg" alt="2.jpeg" title=""></p>
+<p>&emsp;&emsp;接下来就是编译head.s源文件了，如果直接用as工具汇编的话会有错，如下：<br><img src="/2017-07-01-Linux0-0内核编译.html/3.jpeg" alt="3.jpeg" title=""></p>
+<p>&emsp;&emsp;根据提示信息，把103行的%bx改成%ebx，240和249行的movl改成movb。<br>另外，把所有的.align 2改成.algin 4，把所有的.align 3改成.algin 8。这个是语法有所改变吧，以前的2和3表示的是2的2次方和3次方，也就是改变之后的4和8。<br>修改之后就可以编译通过了，下面是使用ld工具来链接，如果直接用下面的命令，是会有问题的：<br><img src="/2017-07-01-Linux0-0内核编译.html/4.jpeg" alt="4.jpeg" title=""></p>
+<p>&emsp;&emsp;这时应该使用如下的命令：<img src="/2017-07-01-Linux0-0内核编译.html/5.jpeg" alt="5.jpeg" title=""></p>
+<p>&emsp;&emsp;其中，-m是指定输出的文件格式是elf格式的，-Ttext 是指定代码段的位置的，-e是指明程序的入口点的。那个警告可以通过在源文件中的.text的下面一行添加.global startup_32来消除的，不添加也无所谓，因为这个时候程序入口点的位置就是0。</p>
+<p>&emsp;&emsp;至此，基本就编译完了，下面要做的就是把编译出的boot和head写入到镜像中，命令如下：<br><img src="/2017-07-01-Linux0-0内核编译.html/6.jpeg" alt="6.jpeg" title=""></p>
+<p>&emsp;&emsp;其中，bs参数表示每次读和写的块的大小，单位为字节（B），if输入文件的名称（inputfile），of是输出文件的名称（outfile），skip是跳过的输入文件的块数，块的大小就是bs参数指定的，seek是跳过的输出文件的块数，大小也是bs参数指定的。由于ld86生成的boot文件有32字节的头信息是不需要的，因此去掉。而对于elf格式的head文件，则有4096字节的头信息，因为引导程序（boot）的大小是一个扇区，即512字节（从命令的执行结果中也可看出），因此写head文件的时候要跳过已经写入的boot文件的大小。</p>
+<p>&emsp;&emsp;现在镜像也写好了，接下来就是运行了，不过在此之前要现写一个启动虚拟机所用的配置文件，如下：<br><img src="/2017-07-01-Linux0-0内核编译.html/7.jpeg" alt="7.jpeg" title=""></p>
+<p>&emsp;&emsp;megs指定的内存为16MB，floppya是软盘驱动器（A）的参数，1_44表示软驱大小为1.44MB，后面跟的是镜像文件，状态为已插入，boot是设置用来启动系统的驱动器，floopy表示软驱启动，disk表示磁盘启动，cdrom光驱启动。</p>
+<p>&emsp;&emsp;然后就可以启动虚拟机了，把配置文件和镜像文件放到同一个目录，然后在终端转到该目录下，用下面命令启动虚拟机：<br><img src="/2017-07-01-Linux0-0内核编译.html/8.jpeg" alt="8.jpeg" title=""></p>
+<p>&emsp;&emsp;运行结果如下：<br><img src="/2017-07-01-Linux0-0内核编译.html/9.jpeg" alt="9.jpeg" title=""></p>
+<p>&emsp;&emsp;总算是完成了，没想到写这种文字这么累人的，向那些写出经典书籍的人致敬！</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
 	<div class="article-category tagcloud">
 		<i class="icon-book icon"></i>
 		<ul class="article-tag-list">
@@ -172,17 +223,77 @@
 	</div>
 
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="http://s.jiathis.com/qrcode.php?url=https://vimd.github.io/2017-07-01-Linux0-0内核编译.html" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
-  
-  
-    </div></section>
+
   
 
-    
+
+
+
+  
+  
+  
+
+  
+
+  
 
 
           </div>
@@ -205,8 +316,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
