@@ -1,0 +1,720 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="1、写作缘由&amp;emsp;&amp;emsp;fork函数是用来创建子进程的，不过，长久以来让我迷惑不解的就是它的一次掉用两次返回，而且两次返回的结果还是不同的：父进程中返回的是子进程的ID，子进程中返回的是0。最近在看Linux 0.11的内核源码，突然犹如那个醍醐灌顶，拨云见日，一切豁然开朗啊。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于fork函数">
+<meta property="og:url" content="https://vimd.github.io/2017/07/22/关于fork函数/index.html">
+<meta property="og:site_name" content="博客">
+<meta property="og:description" content="1、写作缘由&amp;emsp;&amp;emsp;fork函数是用来创建子进程的，不过，长久以来让我迷惑不解的就是它的一次掉用两次返回，而且两次返回的结果还是不同的：父进程中返回的是子进程的ID，子进程中返回的是0。最近在看Linux 0.11的内核源码，突然犹如那个醍醐灌顶，拨云见日，一切豁然开朗啊。">
+<meta property="og:updated_time" content="2017-07-23T09:09:49.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="关于fork函数">
+<meta name="twitter:description" content="1、写作缘由&amp;emsp;&amp;emsp;fork函数是用来创建子进程的，不过，长久以来让我迷惑不解的就是它的一次掉用两次返回，而且两次返回的结果还是不同的：父进程中返回的是子进程的ID，子进程中返回的是0。最近在看Linux 0.11的内核源码，突然犹如那个醍醐灌顶，拨云见日，一切豁然开朗啊。">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://vimd.github.io/2017/07/22/关于fork函数/"/>
+
+
+
+
+
+  <title> 关于fork函数 | 博客 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://vimd.github.io/2017/07/22/关于fork函数/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Liu Zhijun">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                关于fork函数
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-22T16:27:27+08:00">
+                2017-07-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <!-- <font face="微软雅黑" size=4>-->
+<h2 id="1、写作缘由"><a href="#1、写作缘由" class="headerlink" title="1、写作缘由"></a><strong>1、写作缘由</strong></h2><p>&emsp;&emsp;fork函数是用来创建子进程的，不过，长久以来让我迷惑不解的就是它的一次掉用两次返回，而且两次返回的结果还是不同的：父进程中返回的是子进程的ID，子进程中返回的是0。最近在看Linux 0.11的内核源码，突然犹如那个醍醐灌顶，拨云见日，一切豁然开朗啊。</p>
+<a id="more"></a>
+<h2 id="2、fork函数的定义"><a href="#2、fork函数的定义" class="headerlink" title="2、fork函数的定义"></a><strong>2、fork函数的定义</strong></h2><p>&emsp;&emsp;这一切的一切还要从./init/mai.c这个文件开始说起，在开始的地方有这么一行：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">static</span> <span class="keyword">inline</span> _syscall0(<span class="keyword">int</span>,fork)</div></pre></td></tr></table></figure>
+<p>_syscall0时一个宏，定义在./include/unistd.h中的133行，如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">define</span> _syscall0(type,name) \</span></div><div class="line">  type name(void) \</div><div class="line">  &#123; \</div><div class="line">      long __res; \</div><div class="line">      __asm__ volatile (<span class="meta-string">"int $0x80"</span> \   <span class="comment">//系统调用</span></div><div class="line">      : <span class="string">"=a"</span> (__res) \    <span class="comment">//把eax寄存器的值赋值给__res</span></div><div class="line">      : <span class="string">"0"</span> (__NR_##name)); \   <span class="comment">//把__NR_##name放到0号寄存器，即eax</span></div><div class="line">      <span class="keyword">if</span> (__res &gt;= <span class="number">0</span>) \</div><div class="line">      <span class="keyword">return</span> (type) __res; \</div><div class="line">      errno = -__res; \</div><div class="line">      <span class="keyword">return</span> <span class="number">-1</span>; \</div><div class="line"> &#125;</div></pre></td></tr></table></figure>
+<p>AT&amp;T嵌入汇编格式[^atasm]</p>
+<p>因此<code>static inline _syscall0(int,fork)</code>展开之后为：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">static inline int fork(void) </div><div class="line">  &#123; </div><div class="line">      long __res; </div><div class="line">      __asm__ volatile ("int $0x80" </div><div class="line">      : "=a" (__res) </div><div class="line">      : "0" (__NR_fork)); </div><div class="line">      if (__res &gt;= 0) </div><div class="line">      return (int) __res; </div><div class="line">      errno = -__res; </div><div class="line">      return -1; </div><div class="line"> &#125;</div></pre></td></tr></table></figure>
+<p>&emsp;&emsp;这个就是fork函数的定义啊！其中，__NR_fork也是定义在./include/unistd.h中的，在62行：#define __NR_fork 2。这个函数就是去调用0x80号系统调用的2号功能。可是这个2号功能是咩呢？那就请看./include/linux/sys.h文件中的74行开始的地方：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">fn_ptr sys_call_table[] = &#123; sys_setup, sys_exit, sys_fork, sys_read,</div><div class="line">sys_write, sys_open, sys_close, sys_waitpid, sys_creat, sys_link,</div><div class="line">sys_unlink, sys_execve, sys_chdir, sys_time, sys_mknod, sys_chmod,</div><div class="line">sys_chown, sys_break, sys_stat, sys_lseek, sys_getpid, sys_mount,</div><div class="line">sys_umount, sys_setuid, sys_getuid, sys_stime, sys_ptrace, sys_alarm,</div><div class="line">sys_fstat, sys_pause, sys_utime, sys_stty, sys_gtty, sys_access,</div><div class="line">sys_nice, sys_ftime, sys_sync, sys_kill, sys_rename, sys_mkdir,</div><div class="line">sys_rmdir, sys_dup, sys_pipe, sys_times, sys_prof, sys_brk, sys_setgid,</div><div class="line">sys_getgid, sys_signal, sys_geteuid, sys_getegid, sys_acct, sys_phys,</div><div class="line">sys_lock, sys_ioctl, sys_fcntl, sys_mpx, sys_setpgid, sys_ulimit,</div><div class="line">sys_uname, sys_umask, sys_chroot, sys_ustat, sys_dup2, sys_getppid,</div><div class="line">sys_getpgrp, sys_setsid, sys_sigaction, sys_sgetmask, sys_ssetmask,</div><div class="line">sys_setreuid,sys_setregid &#125;;</div></pre></td></tr></table></figure>
+<p>&emsp;&emsp;很容易看出这是一个数组，元素的类型是fn_ptr,这个又是什么呢？那就去看./include/linux/sech.h文件的第38行：typedef int (*fn_ptr)();可以看出fn_ptr是一个函数指针，它所指向的是一个无参的返回类型为int型的函数。作为一个程序员，你应该很敏锐的发现这个功能号2对应的正好是sys_fork在数组中的索引。没错，2号功能就是调用sys_fork函数。</p>
+<h2 id="3、古老的回忆"><a href="#3、古老的回忆" class="headerlink" title="3、古老的回忆"></a><strong>3、古老的回忆</strong></h2><h3 id="3-1-emsp-一直没有搞明白的int-0x80指令"><a href="#3-1-emsp-一直没有搞明白的int-0x80指令" class="headerlink" title="3.1&emsp;一直没有搞明白的int 0x80指令"></a><strong>3.1&emsp;一直没有搞明白的int 0x80指令</strong></h3><p>&emsp;&emsp;上面fork函数的定义很简单，它最重要的地方就是<code>int $0x80</code>这个指令。我紧紧盯着它，“眼泪洒在记忆的门里”。以前学汇编的时候，书上说<code>int 0x80</code>是一个系统调用，这个指令还会取eax寄存器中的值作为功能号。那么，int指令到底干啥用的？说0x80号是系统调用（system_call，定义在./kernel/system_\call.s中）到底是什么意思呢？</p>
+<p>&emsp;&emsp;这就要从中断向量表（赵博士的书中有介绍）开始说起了，你可以把中断向量表想象成一个数组，数组的每一个元素是八个字节的，这八个字节中就包含了一个中断处理程序的地址，说人话就是一个函数的地址，至于这八个字节中的那些位表示地址，可以搜索“中断描述符”了解相关知识。 其实，这个0x80就是这个数组的一个索引。给这个0x80索引位置赋值是在./kernel/sched.c的第411行：</p>
+<p><code>set\_system\_gate(0x80, &amp;system\_call);</code></p>
+<p>上面这个宏定义在./include/asm/system.h中，可以看到这个位置就是system_call函数的地址。set_system_gate宏就不展开了，不过还是要说一下这个宏中的idt定义在./head.s中的232行。</p>
+<p>&emsp;&emsp;中断向量表的作用就是在CPU收到一个中断请求时，到这个表里面找一个中断处理程序来做相应的处理，这些中断处理程序都是系统事先定义好的。</p>
+<p>&emsp;&emsp;因此，int指令就是向CPU发送一个中断请求，而0x80就是告诉CPU调用中断向量表中的0x80（128）号元素指向的函数（中断处理程序）来处理这个请求。而这个0x80处的元素指向的函数就是system_call，翻译过来就是“系统调用”。</p>
+<h3 id="3-2-emsp-谜一样的系统调用功能号"><a href="#3-2-emsp-谜一样的系统调用功能号" class="headerlink" title="3.2 &emsp;谜一样的系统调用功能号"></a><strong>3.2 &emsp;谜一样的系统调用功能号</strong></h3><p>&emsp;&emsp;书中说，在系统调用之前，得先向eax寄存器写入一个功能号，当时只知道要这么做，但不知道为什么要这么做，而且这功能号和中断向量号（例如0x80）傻傻分不清楚。3.1节解释了中断向量号是怎么一回事，在2节说明了系统调用的功能号其实是一个数组的索引，其对应的元素是一个函数指针，即一个具体的功能。那么int指令、中断向量号和功能号是怎么联系起来的呢？</p>
+<p>&emsp;&emsp;3.1节的最后说明了int和向量号是怎么联系起来的，即：int指令向CPU发送一个中断请求，CPU根据中断向量号找到中断处理程序的入口地址，然后从入口地址处开始执行命令。那功能号有什么用？先来看看system_call方法的实现，在./kernel/system_call.s文件中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">_system_call:</div><div class="line">        cmpl $nr_system_calls-1,%eax</div><div class="line">        ja bad_sys_call</div><div class="line">        push %ds </div><div class="line">        push %es </div><div class="line">        push %fs </div><div class="line">        pushl %edx</div><div class="line">        pushl %ecx              # push %ebx,%ecx,%edx as parameters</div><div class="line">        pushl %ebx              # to the system call</div><div class="line">        movl $0x10,%edx         # set up ds,es to kernel space</div><div class="line">        mov %dx,%ds</div><div class="line">        mov %dx,%es</div><div class="line">        movl $0x17,%edx         # fs points to local data space</div><div class="line">        mov %dx,%fs</div><div class="line">        call _sys_call_table(,%eax,4)</div><div class="line">        pushl %eax</div><div class="line">        movl _current,%eax</div><div class="line">        cmpl $0,state(%eax)             # state</div><div class="line">        jne reschedule</div><div class="line">        cmpl $0,counter(%eax)           # counter</div><div class="line">        je reschedule</div></pre></td></tr></table></figure>
+<p>重点看一下第15行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">call \_sys\_call\_table(,%eax,4)</div></pre></td></tr></table></figure>
+<p>_sys_call_table(,%eax,4)是一个寻址，相当于_sys_call_table+%eax*4，而%eax存放的就是功能号2，这也解释了为什么先把功能号放到eax寄存器，乘4是因为每个指针有4个字节，所以前面的地址就成了_sys_call_table+8了，这个就是sys.h中的sys_call_table数组中的第二项，所以这句就等价于：</p>
+<figure class="highlight autoit"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">call</span> sys_fork</div></pre></td></tr></table></figure>
+<p>&emsp;&emsp;<strong>总结一下：</strong>int指令通过给CPU发送一个中断请求，该指令有一个操作数（0x80）指明了处理这个请求的中断处理程序入口地址在中断向量表中的位置，于是CPU从该入口地址处开始执行这段程序，这段程序会取出eax寄存器中的功能号，然后根据这个功能号到sys_call_table中获取一个函数指针，再调用这个函数指针指向的函数（即功能）。现在要分析的这个功能就是创建子进程：sys_fork函数。</p>
+<h2 id="4、fork的两次返回"><a href="#4、fork的两次返回" class="headerlink" title="4、fork的两次返回"></a><strong>4、fork的两次返回</strong></h2><h3 id="4-1-emsp-进程是怎么创建的"><a href="#4-1-emsp-进程是怎么创建的" class="headerlink" title="4.1 &emsp;进程是怎么创建的"></a><strong>4.1 &emsp;进程是怎么创建的</strong></h3><p>&emsp;&emsp;根据上面的分析可知，调用fork函数最终会调用系统的sys_fork函数来实现子进程的创建，那么就来看看这个函数干了什么：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">_sys_fork:</div><div class="line">        call _find_empty_process</div><div class="line">        testl %eax,%eax</div><div class="line">        js 1f</div><div class="line">        push %gs</div><div class="line">        pushl %esi</div><div class="line">        pushl %edi</div><div class="line">        pushl %ebp</div><div class="line">        pushl %eax</div><div class="line">        call _copy_process</div><div class="line">        addl $20,%esp</div><div class="line">1:      ret</div></pre></td></tr></table></figure>
+<p>重点看第2和第10行.</p>
+<p>_find_empty_process方法是找到一还未使用的进程好，保存到一个叫last_pid的全局变量中，然后找到一个空闲的任务，并返回它的索引。</p>
+<p>_copy_process函数的定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">copy_process</span><span class="params">(<span class="keyword">int</span> nr,<span class="keyword">long</span> ebp,<span class="keyword">long</span> edi,<span class="keyword">long</span> esi,<span class="keyword">long</span> gs,<span class="keyword">long</span> none,</span></span></div><div class="line">                <span class="keyword">long</span> ebx,<span class="keyword">long</span> ecx,<span class="keyword">long</span> edx,</div><div class="line">                <span class="keyword">long</span> fs,<span class="keyword">long</span> es,<span class="keyword">long</span> ds,</div><div class="line">                <span class="keyword">long</span> eip,<span class="keyword">long</span> cs,<span class="keyword">long</span> eflags,<span class="keyword">long</span> esp,<span class="keyword">long</span> ss)</div><div class="line">&#123;</div><div class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">p</span>;</span></div><div class="line">        <span class="keyword">int</span> i;</div><div class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">file</span> *<span class="title">f</span>;</span></div><div class="line"></div><div class="line">        p = (struct task_struct *) get_free_page();</div><div class="line">        <span class="keyword">if</span> (!p)</div><div class="line">                <span class="keyword">return</span> -EAGAIN;</div><div class="line">        task[nr] = p;</div><div class="line">        <span class="comment">//新进程就是当前进程的一份拷贝，所以他们刚开始时共享物理内容的，即共享代码和数据</span></div><div class="line">        *p = *current;  <span class="comment">/* NOTE! this doesn't copy the supervisor stack */</span></div><div class="line">        p-&gt;state = TASK_UNINTERRUPTIBLE;</div><div class="line">        <span class="comment">//把find_empty_process方法中找到的进程id赋值给新进程</span></div><div class="line">        p-&gt;pid = last_pid;</div><div class="line">        <span class="comment">//新进程的父进程id就是当前进程的id</span></div><div class="line">        p-&gt;father = current-&gt;pid;</div><div class="line">        <span class="comment">//省略部分代码</span></div><div class="line">        <span class="comment">//eip就是sys_fork调用该函数时压入栈的eip值</span></div><div class="line">        p-&gt;tss.eip = eip;</div><div class="line">        <span class="comment">//为什么子进程中的返回值是0？答案就在这里</span></div><div class="line">        p-&gt;tss.eax = <span class="number">0</span>;</div><div class="line">        <span class="comment">//省略部分代码</span></div><div class="line">        <span class="comment">//cs就是sys_for调用该函数数压入栈的cs值</span></div><div class="line">        p-&gt;tss.cs = cs &amp; <span class="number">0xffff</span>;</div><div class="line">        </div><div class="line">        <span class="keyword">return</span> last_pid;</div></pre></td></tr></table></figure>
+<p>调用get_free_page方法分配一页内存，然后转为task_struct结构，这个task_struct就是进程的数据结构，内存中的一个task_struct就代表一个进程。所以创建一个进程对系统来说就是创建一个task_struct结构。</p>
+<p><code>*p = *current</code>这句就说明子进程是当前进程的拷贝，即他们共享物理内存，包括代码和数据。由于代码是只读的，所以会一直共享，数据是可写的，所当数据页被写时就会发生了著名的写时复制（Copy-On-Write）。</p>
+<p><code>p-&gt;tss.exa=0</code>这句就是把子进程的返回值强制设置成了0。</p>
+<h3 id="4-2-emsp-第二次返回时如何发生的"><a href="#4-2-emsp-第二次返回时如何发生的" class="headerlink" title="4.2&emsp;第二次返回时如何发生的"></a><strong>4.2&emsp;第二次返回时如何发生的</strong></h3><p>&emsp;&emsp;那为什么会两次返回呢？这还要想回到sys_fork函数的定义中，执行<code>call _copy_process</code>时，发生了函数调用，此时cs和eip的值会被压栈，cs和eip正指向下一条指令，即<code>addl $20,%esp</code>。在copy_process函数中，这两个值被赋值给了新进程的tss.cs和tss.eip。当新进程创建完成并设置为RUNNING状态之后，新进程就可以被调度了，这里假设CPU先调度执行父进程（即当前进程）：</p>
+<p>第一次返回（父进程返回）：由于父进程正在执行copy_process函数，因此这个函数的返回值就是最终fork的返回值，而这个函数的返回值就是last_pid，即通过find_empty_process方法分配的新进程id（即子进程id）。返回路径：copy_process-&gt;sys_fork-&gt;system_call-&gt;fork。</p>
+<p>第二次返回（子进程返回）：首先来看子进程被调度时会从哪里开始执行。决定从哪里执行的就是cs和eip寄存器的值，因为CPU是根据cs和eip的值来取下一条指令的。当进程被调度时，会把进程的tss.cs和tss.eip中的值恢复到cs和eip中，根据上面代码中加的注释（22和27行）知道，子进程的tss.cs和tss.eip中的值就是调用copy_process时压入的cs和eip，即他们指向了第sys_for函数的<code>addl $20,%esp</code>，因此子进程就从这一行开始执行，然后就按照sys_fork-&gt;system_call-&gt;fork这样的路径返回，这就是fork函数的第二次返回，它的值就是从子进程的tss.eax回复到eax寄存器中的值：0。</p>
+<p>[^atasm]: _asm_(“汇编语句”: [汇编代码执行完毕后输出的寄存器 ]: [在汇编代码执行前需要输入的参数 ]:  [代码执行过程中会被修改的寄存器)]; “a” “b” “c” “d”分别表示寄存器eax, ebx, ecx, edx ,”S”和”D”表示寄存器esi,edi,串操作中用到 ,”r” 表示任何寄存器 ,”n”表示与上面位置相同的同一寄存器，即寄存器在上三个[]中出现的位置，从0开始计数。<br><!--</font>--></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/07/01/Linux0-0内核编译/" rel="next" title="Linux0.00内核编译">
+                <i class="fa fa-chevron-left"></i> Linux0.00内核编译
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="Liu Zhijun" />
+          <p class="site-author-name" itemprop="name">Liu Zhijun</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/">
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1、写作缘由"><span class="nav-number">1.</span> <span class="nav-text">1、写作缘由</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2、fork函数的定义"><span class="nav-number">2.</span> <span class="nav-text">2、fork函数的定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3、古老的回忆"><span class="nav-number">3.</span> <span class="nav-text">3、古老的回忆</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-emsp-一直没有搞明白的int-0x80指令"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 一直没有搞明白的int 0x80指令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-emsp-谜一样的系统调用功能号"><span class="nav-number">3.2.</span> <span class="nav-text">3.2  谜一样的系统调用功能号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4、fork的两次返回"><span class="nav-number">4.</span> <span class="nav-text">4、fork的两次返回</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-emsp-进程是怎么创建的"><span class="nav-number">4.1.</span> <span class="nav-text">4.1  进程是怎么创建的</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-emsp-第二次返回时如何发生的"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 第二次返回时如何发生的</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Liu Zhijun</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
