@@ -15,7 +15,7 @@ categories: Linux
 &emsp;&emsp;源代码之一的boot.s是用Intel语法写的，因此要使用as86和ld86来进行汇编和链接。我使用的是Ubuntu 10.04，在Synaptic Package Manager中找到了bin86，这个里面含有上面两个工具的，所以安装bin86就好了。至于as和ld这两个工具，Linux自带的都有的。最后还需要一个虚拟机来跑这个内核，我使用的是bochs。这个也可以在Synaptic Package Manager中找到，另外还要安装bochs-x。我比较菜，而且很懒，所以就使用这种图形化的安装方法，也可以使用命令行安装的，自己搜索吧。
 
 &emsp;&emsp;上面完成之后就可以开始编译了，那个压缩包里有Makefile文件的，不过我没有用，而是自己手动编译的，毕竟只有两个源文件。首先是编译boot.s文件，使用如下的命令：
-{% asset_img 1.jpeg %}
+![](1.jpeg)
 
 &emsp;&emsp;不过，这个文件是我从书上抄的，书上有一条语句是这样的“rep movw“，这个要分开两行的，不然会报错的，如下：
 {% asset_img 2.jpeg %}
@@ -28,7 +28,8 @@ categories: Linux
 修改之后就可以编译通过了，下面是使用ld工具来链接，如果直接用下面的命令，是会有问题的：
 {% asset_img 4.jpeg %}
 
-&emsp;&emsp;这时应该使用如下的命令：{% asset_img 5.jpeg %}
+&emsp;&emsp;这时应该使用如下的命令：
+{% asset_img 5.jpeg %}
 
 &emsp;&emsp;其中，-m是指定输出的文件格式是elf格式的，-Ttext 是指定代码段的位置的，-e是指明程序的入口点的。那个警告可以通过在源文件中的.text的下面一行添加.global startup_32来消除的，不添加也无所谓，因为这个时候程序入口点的位置就是0。
 
