@@ -1,0 +1,23 @@
+.category-all-page {
+  margin-top: 50px;
+  .category-all-title {
+    font-weight: 700;
+    font-size: 24px;
+    text-align: center;
+  }
+  .category-list-item:after {
+    content: '';
+    clear: both;
+    display: table;
+  }
+  .category-list-count {
+    float: right;
+    margin-left: 5px;
+  }
+  .category-list-count:before {
+    content: '一共 ';
+  }
+  .category-list-count:after {
+    content: ' 篇文章';
+  }
+}
