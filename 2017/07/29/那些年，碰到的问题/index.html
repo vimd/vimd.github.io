@@ -87,12 +87,16 @@
 
 
 
-<meta property="og:type" content="website">
-<meta property="og:title" content="博客">
-<meta property="og:url" content="https://vimd.github.io/index.html">
+<meta name="description" content="&amp;emsp;&amp;emsp;工作的过程中总是会遇到各种各样的问题，有时候解决了，但是一段时间后再碰到时又忘记了，现在索性记下来方便以后查阅。 1、Android下C和Java中间使用socket的IPC&amp;emsp;&amp;emsp;最近做项目碰到了需要C程序和Java程序间的通信，由于是本地的进程间通信，所以就使用了Unix Domain Socket。服务端用Java写的，使用LocalServerSoc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="那些年，碰到的问题">
+<meta property="og:url" content="https://vimd.github.io/2017/07/29/那些年，碰到的问题/index.html">
 <meta property="og:site_name" content="博客">
+<meta property="og:description" content="&amp;emsp;&amp;emsp;工作的过程中总是会遇到各种各样的问题，有时候解决了，但是一段时间后再碰到时又忘记了，现在索性记下来方便以后查阅。 1、Android下C和Java中间使用socket的IPC&amp;emsp;&amp;emsp;最近做项目碰到了需要C程序和Java程序间的通信，由于是本地的进程间通信，所以就使用了Unix Domain Socket。服务端用Java写的，使用LocalServerSoc">
+<meta property="og:updated_time" content="2017-07-29T14:56:02.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="博客">
+<meta name="twitter:title" content="那些年，碰到的问题">
+<meta name="twitter:description" content="&amp;emsp;&amp;emsp;工作的过程中总是会遇到各种各样的问题，有时候解决了，但是一段时间后再碰到时又忘记了，现在索性记下来方便以后查阅。 1、Android下C和Java中间使用socket的IPC&amp;emsp;&amp;emsp;最近做项目碰到了需要C程序和Java程序间的通信，由于是本地的进程间通信，所以就使用了Unix Domain Socket。服务端用Java写的，使用LocalServerSoc">
 
 
 
@@ -120,13 +124,13 @@
 
 
 
-  <link rel="canonical" href="https://vimd.github.io/"/>
+  <link rel="canonical" href="https://vimd.github.io/2017/07/29/那些年，碰到的问题/"/>
 
 
 
 
 
-  <title> 博客 </title>
+  <title> 那些年，碰到的问题 | 博客 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -151,9 +155,7 @@
     
   
 
-  <div class="container sidebar-position-left 
-   page-home 
- ">
+  <div class="container sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -226,9 +228,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
 
@@ -258,10 +260,7 @@
             
             
               
-                
-                <a class="post-title-link" href="/2017/07/29/那些年，碰到的问题/" itemprop="url">
-                  那些年，碰到的问题
-                </a>
+                那些年，碰到的问题
               
             
           </h1>
@@ -334,30 +333,42 @@
       
 
       
-        
-          <p>&emsp;&emsp;工作的过程中总是会遇到各种各样的问题，有时候解决了，但是一段时间后再碰到时又忘记了，现在索性记下来方便以后查阅。</p>
+        <p>&emsp;&emsp;工作的过程中总是会遇到各种各样的问题，有时候解决了，但是一段时间后再碰到时又忘记了，现在索性记下来方便以后查阅。</p>
 <h3 id="1、Android下C和Java中间使用socket的IPC"><a href="#1、Android下C和Java中间使用socket的IPC" class="headerlink" title="1、Android下C和Java中间使用socket的IPC"></a>1、Android下C和Java中间使用socket的IPC</h3><p>&emsp;&emsp;最近做项目碰到了需要C程序和Java程序间的通信，由于是本地的进程间通信，所以就使用了Unix Domain Socket。服务端用Java写的，使用LocalServerSocket类：LocalServerSocket lss = new LocalServerSocket(name);这一句相当于C中调用了socket、bind和listen三个函数，然后在调用该对象的accept函数就可以了。这本来没有什么问题，关键在于LocalServerSocket类的构造函数中的name参数，Google官网上对这个构造函数的解释有这么一句： the name is created in the Linux abstract namespace (instead of on the filesystem).（<a href="&quot;http://developer.android.com/reference/android/net/LocalServerSocket.html&quot;">LocalServerSocket</a>)。可以看到这个socket不是在文件系统中创建的（普通的Unix Domain Socket创建后会在某个目录下有个socket文件，比如：dev/socket/mysocket），而是在所谓的“抽象的命名空间”中创建的，这就决定了客户端不能用普通的socket函数来获得一个socket文件描述符，得使用cutils库中的socket_local_client函数（需要#include <cutils sockets.h="">)，并且第二个参数要指定为：ANDROID_SOCKET_NAMESPACE_ABSTRACT。</cutils></p>
-<h3 id="2、大端小端以及数字和数字对应的字符"><a href="#2、大端小端以及数字和数字对应的字符" class="headerlink" title="2、大端小端以及数字和数字对应的字符"></a>2、大端小端以及数字和数字对应的字符</h3>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2017/07/29/那些年，碰到的问题/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
+<h3 id="2、大端小端以及数字和数字对应的字符"><a href="#2、大端小端以及数字和数字对应的字符" class="headerlink" title="2、大端小端以及数字和数字对应的字符"></a>2、大端小端以及数字和数字对应的字符</h3><a id="more"></a>
+<p>&emsp;&emsp;同事碰到一个问题：用Java通过socket把字符串“1512”传给C程序，C程序再通过memcpy函数把它拷贝到一个int型变量的地址空间，结果却变成了8亿多。他问我的时候，我第一感觉是大端小端的问题，我把1512用大端法计算了一下结果，是33621249（0x02010501，我是按一个字符两个字节来算的）。我实在想不到是什么原因了，当时我也不知道那个8亿多的数字具体是多少，由于到下班时间了，就走了。第二天我自己试了一下，确实是8亿多，然我我把它转换成十六进制表示是：0x32313531。看到这串数字的一刹那我都明白了：大端小端确实是问题之一，而另外一个则是字符“1”和数字1的问题。数字1在内存里用一个字节表示就是0x01，但是字符“1”在内存里的表示却是0x31（就是它的ASCII码，十进制为49），所以当我看到那串十六进制的时候就如醍醐灌顶。</p>
+<p>&emsp;&emsp;事情并没有就这么结束，因为我还有两个问题没有明白：一个是Java是按大端来发送的，但是C程序却是用小端来存储的（其实是和处理器有关，我那个机器的处理器是小端的），那么为什么传过来的不是“2151”？另一个是Java里的字符是用两个字节存的，而C程序是按一个字节存的，但是为什么发送过来的却是正确的呢？</p>
+<p>&emsp;&emsp;我想了一下发现第一个问题比较白痴， 大端和小端是相对于一个数据来说的，而“1512”在Java中相当于是四个数据（四个char），所以不管大端小端，这个顺序都不会变得。举个例子，假设一个字符是两字节，那么上面的字符串用大端在内存中的表示就是“0031003500321032”，小端的表示为“31003500310032”，看到了吗，不管大端小端，整体的顺序都是“1512”，只是具体到“1”这个数据的时候才会有“0031”和“3100”的区别。</p>
+<p>&emsp;&emsp;对于第二个问题，就和字符集有关了。Java通过socket给C程序发送字符串时需要把字符串转换成字节数组，Java的String对象有一个getBytes()函数可以做到。如果不给参数这是使用默认的字符集把String编码byte序列，我用的机器的默认字符集恰好是“UFT-8”，每个字符是一个字节编码的，所以无所谓大端小端（因为只有一个字节）。如果给getBytes传一个“UTF-16LE”参数（字符用十六位的小端法编码），当传“abc”给C程序，那么打印的将是“a”。为什么呢？因为是十六位小端编码，所以“abc”的字节编码为：\97\0\98\0\99\0。而C程序接收到的是：\97\0\98\0\99\0。由于C程序认为\0是字符串的结束符，所以只打印\97，即“a”。相应的，如果使用“UTF-16BE”（十六位大端法编码），则C程序收到的将是：\0\97\0\98\0\99，所以打印的会是空。可以看到，不管大端小端，接收到的字符序列是不会变的，都是“abc”。</p>
+<h3 id="3、C语言-include头文件的顺序问题"><a href="#3、C语言-include头文件的顺序问题" class="headerlink" title="3、C语言#include头文件的顺序问题"></a>3、C语言#include头文件的顺序问题</h3><p>&emsp;&emsp;一直以为C语言中#include的头文件的顺序是没有关系，但在最近编译代码的时候却发现了问题：我在最前面又#include一个头文件后编译就报错了（expected identifier before numeric constant）。我很不能理解，然后我就想把这个头文件放到最后面好了（我当时觉得这么做很可笑，好在我还是这么做了），然后编译竟然通过了。我现在更不能理解了，这在一定程度上颠覆了我对头文件顺序的认知。虽然问题解决了，但是我还是想想知道为什么，不然我肯定“寝不安席，食不甘味”。我比较了一下两个头文件的内容，感觉没有会导致这个错误的，我当时忽略了这两个头文件里面#include的头文件的检查，后来我不经意间看到一个头文件中有这么一句：#include<stdbool.h>。这个就是定义布尔型的，但是另外一个头文件（base.h)中也有一个这样的定义：</stdbool.h></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">typedef</span> <span class="keyword">enum</span> &#123;</div><div class="line"> <span class="literal">false</span> = <span class="number">0</span>,</div><div class="line"> <span class="literal">true</span> = <span class="number">1</span></div><div class="line">&#125; <span class="keyword">bool</span>;</div></pre></td></tr></table></figure>
+<p>报错的地方也是在这里，然后找到stdbool.h这个头文件，里面有这么一段：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">define</span> false   0</span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> true    1</span></div></pre></td></tr></table></figure>
+<p>&emsp;&emsp;如果对宏很熟悉的话就会发现问题所在，如果把stdbool.h放在base.h前面的话，那么base.h中的那个定义就变成了下面这个样子：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">typedef</span> <span class="keyword">enum</span>&#123;</div><div class="line">    <span class="number">0</span> = <span class="number">0</span>,</div><div class="line">    <span class="number">1</span> = <span class="number">1</span></div><div class="line">&#125; <span class="keyword">bool</span>;</div></pre></td></tr></table></figure>
+<p>到这里那个报错的意思就很容易理解了。肯定没有人直接写这样的代码，但是经过宏伪装后就很难说了。</p>
+
+      
+    </div>
+
+    <div>
+      
         
+
       
     </div>
 
     <div>
       
-    </div>
+        
 
-    <div>
       
     </div>
 
     <div>
+      
+        
+
       
     </div>
 
@@ -365,317 +376,38 @@
       
 
       
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="https://vimd.github.io/2017/07/22/关于fork函数/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Liu Zhijun">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="博客">
-    </span>
-
-    
-      <header class="post-header">
-
         
-        
-          <h1 class="post-title" itemprop="name headline">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
             
+              <a href="/2017/07/22/关于fork函数/" rel="next" title="关于fork函数">
+                <i class="fa fa-chevron-left"></i> 关于fork函数
+              </a>
             
-              
-                
-                <a class="post-title-link" href="/2017/07/22/关于fork函数/" itemprop="url">
-                  关于fork函数
-                </a>
-              
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
             
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-22T16:27:27+08:00">
-                2017-07-22
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Linux/" itemprop="url" rel="index">
-                    <span itemprop="name">Linux</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
+          </div>
         </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
       
 
       
-        
-          <!-- <font face="微软雅黑" size=4>-->
-<h2 id="1、写作缘由"><a href="#1、写作缘由" class="headerlink" title="1、写作缘由"></a><strong>1、写作缘由</strong></h2><p>&emsp;&emsp;fork函数是用来创建子进程的，不过，长久以来让我迷惑不解的就是它的一次掉用两次返回，而且两次返回的结果还是不同的：父进程中返回的是子进程的ID，子进程中返回的是0。最近在看Linux 0.11的内核源码，突然犹如那个醍醐灌顶，拨云见日，一切豁然开朗啊。</p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2017/07/22/关于fork函数/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
       
     </footer>
   </article>
 
 
-    
-      
 
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="https://vimd.github.io/2017/07/01/Linux0-0内核编译/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Liu Zhijun">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="博客">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/07/01/Linux0-0内核编译/" itemprop="url">
-                  Linux0.00内核编译
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-01T17:43:42+08:00">
-                2017-07-01
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Linux/" itemprop="url" rel="index">
-                    <span itemprop="name">Linux</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>&emsp;&emsp;一直以来都很浮躁，不能静下心来学习，但是“知其然，而不知其所以然”的状态又很让我不安，经常处在这样的矛盾之中。从小就很崇拜科学家和技术很厉害的人，而我也知道，对事物认识的深度决定了所能达到的高度，只是没有这样的恒心去坚持 。这次又燃起了三分钟学习的热度，不知道何时会退却，如果能在这个热度前加个限期，我希望是：死循环。</p>
-<p>&emsp;&emsp;最近在看赵炯的《Linux内核完全剖析》，第四章给出了一个简单的内核代码，据说这是当年Linus写的第一个版本的代码，不过因为意外在江湖上失传了，就没有了原版的Linux－0.00版本的内核了，书中的代码是作者自己写的。好吧，言归正传，就讲讲最近几天编译这个内核学到的东西，其实我不太愿意写这样的文字，但是好记性不如烂笔头，先记下免得以后忘记。这里有一篇文章讲的挺好的：<a href="http://blog.csdn.net/qaz19870418/article/details/6049147" target="_blank" rel="external">http://blog.csdn.net/qaz19870418/article/details/6049147</a> ,我只做一些补充性的说明。</p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2017/07/01/Linux0-0内核编译/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
+    <div class="post-spread">
       
     </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-  </section>
-
-  
+  </div>
 
 
           </div>
@@ -683,6 +415,10 @@
 
 
           
+  <div class="comments" id="comments">
+    
+  </div>
+
 
         </div>
         
@@ -702,8 +438,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/avatar.jpg"
@@ -756,6 +501,22 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、Android下C和Java中间使用socket的IPC"><span class="nav-number">1.</span> <span class="nav-text">1、Android下C和Java中间使用socket的IPC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、大端小端以及数字和数字对应的字符"><span class="nav-number">2.</span> <span class="nav-text">2、大端小端以及数字和数字对应的字符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3、C语言-include头文件的顺序问题"><span class="nav-number">3.</span> <span class="nav-text">3、C语言#include头文件的顺序问题</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -870,6 +631,10 @@
 
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
 
   
 
