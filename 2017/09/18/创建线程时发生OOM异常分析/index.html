@@ -1,0 +1,710 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="&amp;emsp;&amp;emsp;最近我们应用线上出现了一个问题：创建线程时发生OOM异常导致崩溃。领导让深入分析一下，看看是什么原因。既然要深入分析，那就只有一条路了：看源码。以下分析时基于Android 4.0.4源码。 1、Thread对象是如何和线程关联的&amp;emsp;&amp;emsp;我们知道new一个Thread对象就会创建一个线程，那这个是怎么实现的呢？看Thread源码发现，当new一个Thread">
+<meta property="og:type" content="article">
+<meta property="og:title" content="创建线程时发生OOM异常分析">
+<meta property="og:url" content="https://vimd.github.io/2017/09/18/创建线程时发生OOM异常分析/index.html">
+<meta property="og:site_name" content="博客">
+<meta property="og:description" content="&amp;emsp;&amp;emsp;最近我们应用线上出现了一个问题：创建线程时发生OOM异常导致崩溃。领导让深入分析一下，看看是什么原因。既然要深入分析，那就只有一条路了：看源码。以下分析时基于Android 4.0.4源码。 1、Thread对象是如何和线程关联的&amp;emsp;&amp;emsp;我们知道new一个Thread对象就会创建一个线程，那这个是怎么实现的呢？看Thread源码发现，当new一个Thread">
+<meta property="og:updated_time" content="2017-09-19T01:31:02.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="创建线程时发生OOM异常分析">
+<meta name="twitter:description" content="&amp;emsp;&amp;emsp;最近我们应用线上出现了一个问题：创建线程时发生OOM异常导致崩溃。领导让深入分析一下，看看是什么原因。既然要深入分析，那就只有一条路了：看源码。以下分析时基于Android 4.0.4源码。 1、Thread对象是如何和线程关联的&amp;emsp;&amp;emsp;我们知道new一个Thread对象就会创建一个线程，那这个是怎么实现的呢？看Thread源码发现，当new一个Thread">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://vimd.github.io/2017/09/18/创建线程时发生OOM异常分析/"/>
+
+
+
+
+
+  <title> 创建线程时发生OOM异常分析 | 博客 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://vimd.github.io/2017/09/18/创建线程时发生OOM异常分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Liu Zhijun">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                创建线程时发生OOM异常分析
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-18T21:50:57+08:00">
+                2017-09-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>&emsp;&emsp;最近我们应用线上出现了一个问题：创建线程时发生OOM异常导致崩溃。领导让深入分析一下，看看是什么原因。既然要深入分析，那就只有一条路了：看源码。以下分析时基于Android 4.0.4源码。</p>
+<h3 id="1、Thread对象是如何和线程关联的"><a href="#1、Thread对象是如何和线程关联的" class="headerlink" title="1、Thread对象是如何和线程关联的"></a>1、Thread对象是如何和线程关联的</h3><p>&emsp;&emsp;我们知道new一个Thread对象就会创建一个线程，那这个是怎么实现的呢？看Thread源码发现，当new一个Thread对象时并没有创建线程，只是一些变量赋值（Thread的构造方法会调用create方法）。<br>其实，线程的创建是在调用Thread对象的start方法是发生的，start方法的源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (hasBeenStarted) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalThreadStateException(<span class="string">"Thread already started."</span>); <span class="comment">// TODO Externalize?</span></div><div class="line">        &#125;</div><div class="line"></div><div class="line">        hasBeenStarted = <span class="keyword">true</span>;</div><div class="line"></div><div class="line">        VMThread.create(<span class="keyword">this</span>, stackSize);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<a id="more"></a>
+<p>通过调用VMThread的create方法，该方法是一个native方法，实现在/dalvik/vm/native/java_lang_VMThread.cpp文件中，如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Dalvik_java_lang_VMThread_create</span><span class="params">(<span class="keyword">const</span> u4* args, JValue* pResult)</span></span></div><div class="line">&#123;</div><div class="line">    Object* threadObj = (Object*) args[<span class="number">0</span>];</div><div class="line">    s8 stackSize = GET_ARG_LONG(args, <span class="number">1</span>);</div><div class="line"></div><div class="line">    <span class="comment">/* copying collector will pin threadObj for us since it was an argument */</span></div><div class="line">    dvmCreateInterpThread(threadObj, (<span class="keyword">int</span>) stackSize);</div><div class="line">    RETURN_VOID();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>该方法又调用了dvmCreateInterpThread方法，这个方法定义在/dalvik/vm/Thread.cpp文件中，如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">bool</span> <span class="title">dvmCreateInterpThread</span><span class="params">(Object* threadObj, <span class="keyword">int</span> reqStackSize)</span></span></div><div class="line">&#123;</div><div class="line"><span class="comment">//省略部分代码</span></div><div class="line"><span class="keyword">int</span> cc = pthread_create(&amp;threadHandle, &amp;threadAttr, interpThreadStart,</div><div class="line">                            newThread);</div><div class="line">    dvmChangeStatus(self, oldStatus);</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (cc != <span class="number">0</span>) &#123;</div><div class="line">        <span class="comment">/*</span></div><div class="line">         * Failure generally indicates that we have exceeded system</div><div class="line">         * resource limits.  VirtualMachineError is probably too severe,</div><div class="line">         * so use OutOfMemoryError.</div><div class="line">         */</div><div class="line">        LOGE(<span class="string">"Thread creation failed (err=%s)"</span>, strerror(errno));</div><div class="line"></div><div class="line">        dvmSetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread, <span class="literal">NULL</span>);</div><div class="line"></div><div class="line">        dvmThrowOutOfMemoryError(<span class="string">"thread creation failed"</span>);</div><div class="line">        <span class="keyword">goto</span> fail;</div><div class="line">   &#125;</div><div class="line">   <span class="comment">//省略部分代码</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>dvmCreateInterpThread最终是调用pthread_create方法来创建线程的，当pthread_create方法返回错误时（cc不等于0）就会打印出错信息，并且会抛出一个OOM的异常，这个OOM最终会被throw到Java层引起崩溃。pthread_create定义在/bionic/libc/bionic/pthread.c文件中，如下：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">int pthread_create(pthread_t *thread_out, pthread_attr_t const * attr,</div><div class="line">                   void *(*start_routine)(void *), void * arg)</div><div class="line">&#123;</div><div class="line">pthread_internal_t * thread;</div><div class="line">//....</div><div class="line">thread = _pthread_internal_alloc();</div><div class="line">//省略无关代码</div><div class="line">if (!attr-&gt;stack_base) &#123;</div><div class="line">        stack = mkstack(stackSize, attr-&gt;guard_size);</div><div class="line">        if(stack == NULL) &#123;</div><div class="line">            _pthread_internal_free(thread);</div><div class="line">            return ENOMEM;</div><div class="line">        &#125;</div><div class="line">        madestack = 1;</div><div class="line">    &#125; else &#123;</div><div class="line">        stack = attr-&gt;stack_base;</div><div class="line">    &#125;</div><div class="line">//省略无关代码</div></pre></td></tr></table></figure>
+<p>该方法先为thread的结构体分配一块内存，然后调用了mkstack方法为当前thread分配一块栈空间，该方法定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> *<span class="title">mkstack</span><span class="params">(<span class="keyword">size_t</span> size, <span class="keyword">size_t</span> guard_size)</span></span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">void</span> * <span class="built_in">stack</span>;</div><div class="line"></div><div class="line">    pthread_mutex_lock(&amp;mmap_lock);</div><div class="line"></div><div class="line">    <span class="built_in">stack</span> = mmap((<span class="keyword">void</span> *)gStackBase, size,</div><div class="line">                 PROT_READ | PROT_WRITE,</div><div class="line">                 MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE,</div><div class="line">                 <span class="number">-1</span>, <span class="number">0</span>);</div><div class="line"></div><div class="line">    <span class="keyword">if</span>(<span class="built_in">stack</span> == MAP_FAILED) &#123;</div><div class="line">        <span class="built_in">stack</span> = <span class="literal">NULL</span>;</div><div class="line">        <span class="keyword">goto</span> done;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">if</span>(mprotect(<span class="built_in">stack</span>, guard_size, PROT_NONE))&#123;</div><div class="line">        munmap(<span class="built_in">stack</span>, size);</div><div class="line">        <span class="built_in">stack</span> = <span class="literal">NULL</span>;</div><div class="line">        <span class="keyword">goto</span> done;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">done:</div><div class="line">    pthread_mutex_unlock(&amp;mmap_lock);</div><div class="line">    <span class="keyword">return</span> <span class="built_in">stack</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>mkstack调用mmap方法为当前线程在进程的虚拟地址空间分配一块空间（默认情况下该空间大小约为1M）。</p>
+<p>从上面分析可知Java层的Thread对象时如何与native层的线程关联起来的，说白了就是Thread是通过JNI对native线程及其它操作的一个封装。</p>
+<h3 id="2、问题分析"><a href="#2、问题分析" class="headerlink" title="2、问题分析"></a>2、问题分析</h3><p>&emsp;&emsp;当时面临两个问题需要高明白：</p>
+<ol>
+<li>为什么发生OOM</li>
+<li>为什么上传到服务器上的崩溃没有native层的</li>
+</ol>
+<p>&emsp;&emsp;这两个问题之后会解答，现在先对代码进行分析。</p>
+<p>&emsp;&emsp;从pthread_create方法中可以看出，调用_pthread_internal_alloc和mkstack方法失败时都表示发生了OOM（返回值为ENOMEM），我刚开怀疑的是mkstack，因为另外一个函数分配的内存比较小，出错的概率也就比较小，事实证明也就是这个函数调用失败了。在mkstack函数中调用了mmap，最根本的原因就在于这个mmap方法调用失败了。</p>
+<p>&emsp;&emsp;mmap是用于在进程虚拟地址空间分配一段指定大小的连续空间，对于32位系统来说，进程的虚拟地址空间为4g，一般系统会占用1g，剩余3g是给应用使用的，这3g包括framework和应用的apk、系统及应用的so、预先分配的堆空间等等，实际当一个应用刚运行的时候可能已经分配大于1个g的空间了，所以给应用用来分配的一般不到2g。当不断创建新线程时，就会不断分配虚拟地址空间，很明显，当线程都到一定数量之后虚拟地址空间就会被耗尽，从而引发OOM。</p>
+<p>&emsp;&emsp;为了验证上面的说法，我写了一个demo，通过JNI在native层不断创建线程，当pthread_create返回值不为0时打印一句log，并退出循环。代码如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">create_thread</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">while</span>(<span class="literal">true</span>) &#123;</div><div class="line">            count++;</div><div class="line">             <span class="keyword">pthread_t</span> pt;</div><div class="line">             <span class="keyword">int</span> cc = pthread_create(&amp;pt, <span class="literal">NULL</span>, &amp;thread_fun, (<span class="keyword">void</span> *) <span class="literal">NULL</span>);</div><div class="line">            <span class="keyword">if</span>(count % <span class="number">100</span> == <span class="number">0</span>) &#123;</div><div class="line">                sleep(<span class="number">1</span>);</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">if</span>(cc != <span class="number">0</span>) &#123;</div><div class="line">                __android_log_print(ANDROID_LOG_WARN, <span class="string">"create_thread"</span>, <span class="string">"cc=%d,count=%d"</span>, cc, count);</div><div class="line">                <span class="keyword">return</span> cc;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line"> &#125;</div></pre></td></tr></table></figure>
+<p>&emsp;&emsp;当看到由于线程创建失败打印的信息时，就从设备中把/proc/{pid}/maps文件pull出来，这个文件记录了当前进程虚拟地址空间的映射情况。到此可以回答刚开始提出的两个问题：</p>
+<p>&emsp;&emsp;对于第一个问题，时由于线程创建太多会导致虚拟地址空间耗尽，此时虚拟机在Java层抛出了一个OOM异常。</p>
+<p>&emsp;&emsp;对于第二个问题，从demo中的打印可以看出，当pthread_create失败时仅仅是返回一个不为0的返回值，程序完全可以忽略这个值，因此并不会导致崩溃。</p>
+<h3 id="3、来自系统的恶意"><a href="#3、来自系统的恶意" class="headerlink" title="3、来自系统的恶意"></a>3、来自系统的恶意</h3><p>&emsp;&emsp;上面分析的时一般的问题原因，demo也是在一般的设备上测试的，我们的应用刚启动时也就创建了100个线程左右，应该不会发生OOM才对。但是当我把我的demo放到有问题的设备上测试时，发现maps文件的虚拟地址空间才映射到0x7d398000。这离系统分配的栈空间的起始地址：be9f9000（大致这个位置）还早着呢，怎么就失败了呢？</p>
+<p>&emsp;&emsp;首先想到的时这个设备用于应用分配的空间有限制。然后就开始验证：当pthread_create方法失败时，在直接调用mmap方法分配了一个300M内存，发现并没有失败（看返回值），pull出来的maps文件也可以看出有一段300M的虚拟地址空间映射。那就说明还有其他原因。从pthread_create返回失败时打印的log看出来，当前的进程值创建了600多个线程就失败了，而我在另外一个设备上创建了1300多，难道是系统对线程数有限制？于是就在设备上看了一下/proc/sys/kernel/threads-max文件，发现这个里面的数值是1371，即这个设备的系统中最多只能创建1371个线程，我查看了一下这个设备刚启动时候的线程数（ps -t | wc -l），发现有800多个，当在设备上启动几个应用之后很快就上升到1000多，这个时候如果在启动我们的应用就会有可能超过系统总的线程数，从而引发OOM。</p>
+<p>&emsp;&emsp;这个问题最终也没有想到好的解决方法，只能降低自己应用的线程数，降低OOM发生的概率。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/08/05/关于人气是什么的一个启示/" rel="next" title="关于人气是什么的一个启示">
+                <i class="fa fa-chevron-left"></i> 关于人气是什么的一个启示
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="Liu Zhijun" />
+          <p class="site-author-name" itemprop="name">Liu Zhijun</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/">
+                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、Thread对象是如何和线程关联的"><span class="nav-number">1.</span> <span class="nav-text">1、Thread对象是如何和线程关联的</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、问题分析"><span class="nav-number">2.</span> <span class="nav-text">2、问题分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3、来自系统的恶意"><span class="nav-number">3.</span> <span class="nav-text">3、来自系统的恶意</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Liu Zhijun</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
