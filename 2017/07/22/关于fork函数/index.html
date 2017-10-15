@@ -358,7 +358,7 @@
 <p>重点看一下第15行：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">call \_sys\_call\_table(,%eax,4)</div></pre></td></tr></table></figure>
 <p>_sys_call_table(,%eax,4)是一个寻址，相当于_sys_call_table+%eax*4，而%eax存放的就是功能号2，这也解释了为什么先把功能号放到eax寄存器，乘4是因为每个指针有4个字节，所以前面的地址就成了_sys_call_table+8了，这个就是sys.h中的sys_call_table数组中的第二项，所以这句就等价于：</p>
-<figure class="highlight autoit"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">call</span> sys_fork</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">call sys_fork</div></pre></td></tr></table></figure>
 <p>&emsp;&emsp;<strong>总结一下：</strong>int指令通过给CPU发送一个中断请求，该指令有一个操作数（0x80）指明了处理这个请求的中断处理程序入口地址在中断向量表中的位置，于是CPU从该入口地址处开始执行这段程序，这段程序会取出eax寄存器中的功能号，然后根据这个功能号到sys_call_table中获取一个函数指针，再调用这个函数指针指向的函数（即功能）。现在要分析的这个功能就是创建子进程：sys_fork函数。</p>
 <h2 id="4、fork的两次返回"><a href="#4、fork的两次返回" class="headerlink" title="4、fork的两次返回"></a><strong>4、fork的两次返回</strong></h2><h3 id="4-1-emsp-进程是怎么创建的"><a href="#4-1-emsp-进程是怎么创建的" class="headerlink" title="4.1 &emsp;进程是怎么创建的"></a><strong>4.1 &emsp;进程是怎么创建的</strong></h3><p>&emsp;&emsp;根据上面的分析可知，调用fork函数最终会调用系统的sys_fork函数来实现子进程的创建，那么就来看看这个函数干了什么：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">_sys_fork:</div><div class="line">        call _find_empty_process</div><div class="line">        testl %eax,%eax</div><div class="line">        js 1f</div><div class="line">        push %gs</div><div class="line">        pushl %esi</div><div class="line">        pushl %edi</div><div class="line">        pushl %ebp</div><div class="line">        pushl %eax</div><div class="line">        call _copy_process</div><div class="line">        addl $20,%esp</div><div class="line">1:      ret</div></pre></td></tr></table></figure>
@@ -493,7 +493,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/">
-                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
