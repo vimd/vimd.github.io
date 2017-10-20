@@ -2,7 +2,7 @@
 title: 创建线程时发生OOM异常分析
 
 date: 2017-09-18 21:50:57
-tags: Android
+categories: Android
 ---
 &emsp;&emsp;最近我们应用线上出现了一个问题：创建线程时发生OOM异常导致崩溃。领导让深入分析一下，看看是什么原因。既然要深入分析，那就只有一条路了：看源码。以下分析时基于Android 4.0.4源码。
 
@@ -22,6 +22,7 @@ public synchronized void start() {
     }
 ```
 
+<!--more-->
 通过调用VMThread的create方法，该方法是一个native方法，实现在/dalvik/vm/native/java\_lang\_VMThread.cpp文件中，如下：
 
 ```cpp
@@ -137,7 +138,20 @@ mkstack调用mmap方法为当前线程在进程的虚拟地址空间分配一块
 &emsp;&emsp;为了验证上面的说法，我写了一个demo，通过JNI在native层不断创建线程，当pthread_create返回值不为0时打印一句log，并退出循环。代码如下：
 
 ```cpp
-int create_thread() {    while(true) {        count++;        pthread_t pt;        int cc = pthread_create(&pt, NULL, &thread_fun, (void *) NULL);        if(count % 100 == 0) {            sleep(1);        }        if(cc != 0) {            __android_log_print(ANDROID_LOG_WARN, "create_thread", "cc=%d,count=%d", cc, count);            return cc;        }    }}
+int create_thread() {
+    while(true) {
+            count++;
+             pthread_t pt;
+             int cc = pthread_create(&pt, NULL, &thread_fun, (void *) NULL);
+            if(count % 100 == 0) {
+                sleep(1);
+            }
+            if(cc != 0) {
+                __android_log_print(ANDROID_LOG_WARN, "create_thread", "cc=%d,count=%d", cc, count);
+                return cc;
+            }
+        }
+ }
 ```
 
 &emsp;&emsp;当看到由于线程创建失败打印的信息时，就从设备中把/proc/{pid}/maps文件pull出来，这个文件记录了当前进程虚拟地址空间的映射情况。到此可以回答刚开始提出的两个问题：
