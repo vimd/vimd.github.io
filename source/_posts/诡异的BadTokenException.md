@@ -84,7 +84,7 @@ public void setView(View view, WindowManager.LayoutParams attrs, View panelParen
 
 &emsp;&emsp;当res的值为WindowManagerGlobal.ADD\_BAD\_APP\_TOKEN、WindowManagerGlobal.ADD\_BAD\_SUBWINDOW\_TOKEN和WindowManagerGlobal.ADD\_NOT\_APP\_TOKEN等都会抛出这个异常。
 
-####为什么会抛这个异常
+#### 为什么会抛这个异常
 
 &emsp;&emsp;上面可以看到，当res为为某些值得时候就会抛出异常。那这个res的值是什么呢？上面代码有如下一句：
 
@@ -154,7 +154,7 @@ final void attach(Context context, ActivityThread aThread,
         mWindowManager = mWindow.getWindowManager();
 }
 ```
-&emsp;&emsp;这个方法是在哪里被调用的呢？这个就牵扯到Activity的启动过程了([传送门](http://blog.csdn.net/luoshengyang/article/details/6689748))，这里中简要说一下。Activity的attach方法是在ActivityThread中调用的，调用关系为scheduleLaunchActivity->handleLaunchActivity->performLaunchActivity，其中scheduleLaunchActivity是ActivityThread的内部类ApplicationThread中的方法。
+&emsp;&emsp;这个方法是在哪里被调用的呢？这个就牵扯到Activity的启动过程了([传送门](http://blog.csdn.net/luoshengyang/article/details/6689748))，这里简要说一下。Activity的attach方法是在ActivityThread中调用的，调用关系为scheduleLaunchActivity->handleLaunchActivity->performLaunchActivity，其中scheduleLaunchActivity是ActivityThread的内部类ApplicationThread中的方法。
 
 &emsp;&emsp;scheduleLaunchActivity方法如下：
 
@@ -237,7 +237,7 @@ priivate Activity performLaunchActivity(ActivityClientRecord r, Intent customInt
         }
         //省略部分代码
 ```
-&emsp;&emsp;可以看到，在performLaunchActivity中创建一个Activity并调用了它的attach方法。attach方法的token参数最初是来自scheduleLaunchActivity方法，那么scheduleLaunchActivity方法中的token参数来自哪里呢？它是ActivityStackSupervisor在realStartActivityLocked方法，代码如下：
+&emsp;&emsp;可以看到，在performLaunchActivity中创建一个Activity并调用了它的attach方法。attach方法的token参数最初是来自scheduleLaunchActivity方法，那么scheduleLaunchActivity方法中的token参数来自哪里呢？它是ActivityStackSupervisor的realStartActivityLocked方法，代码如下：
 
 ```java
 final boolean realStartActivityLocked(ActivityRecord r, ProcessRecord app,
@@ -253,7 +253,7 @@ app.thread.scheduleLaunchActivity(new Intent(r.intent), r.appToken,
 }
 ```
 
-&emsp;&emsp;其中app.thread是一个binder对象，代表客户端的ApplicationThread对象。可以看到scheduleLaunchActivity的token参数是通过ActivityRecord的对象r获得的。这个ActivityRecord对象时在ActivityStarter的startActivityLocked方法中创建的，源码如下：
+&emsp;&emsp;其中app.thread是一个binder对象，代表客户端的ApplicationThread对象。可以看到scheduleLaunchActivity的token参数是通过ActivityRecord的对象r获得的。这个ActivityRecord对象是在ActivityStarter的startActivityLocked方法中创建的，源码如下：
 
 ```java
 final int startActivityLocked(IApplicationThread caller, Intent intent, Intent ephemeralIntent,
@@ -276,7 +276,7 @@ final int startActivityLocked(IApplicationThread caller, Intent intent, Intent e
 
 ##### token如是何被添加的
 
-&emsp;&emsp;上面找到了token被创建的逻辑，它是在Activity启动的时候由server端创建的。其实在Activity启动的时候AMS还会白创建好的token添加到WMS中。源码在ActivityStack中，该类的startActivityLocked方法会调用addConfigOverride方法，在该方法中会调用添加token的方法，代码如下：
+&emsp;&emsp;上面找到了token被创建的逻辑，它是在Activity启动的时候由server端创建的。其实在Activity启动的时候AMS还会把创建好的token添加到WMS中。源码在ActivityStack中，该类的startActivityLocked方法会调用addConfigOverride方法，在该方法中会调用添加token的方法，代码如下：
 
 ```java
 void addConfigOverride(ActivityRecord r, TaskRecord task) {
@@ -351,19 +351,20 @@ public void addAppToken(int addPos, IApplicationToken token, int taskId, int sta
         }
     }
 ```
-&emsp;&emsp;该方法中会new一个AppWindowToken对象atoken，然后使用token的asBinder的返回值最为key来保存atoken。在【2.2】节中的addWindow方法中会从mTokenMap变量中获取token。
+&emsp;&emsp;该方法中会new一个AppWindowToken对象atoken，然后使用token的asBinder的返回值做为key来保存atoken。在【2.2】节中的addWindow方法中会从mTokenMap变量中获取token。
 
 &emsp;&emsp;至此，token的创建、添加以及使用理清楚了。总结一下就是：
 
 1. 启动Activity的时候AMS会创建token
 2. 创建token之后AMS会把它添加到WMS中
 3. Dialog显示的时候会在ViewRootImpl的setView中调用WMS的addWindow方法，此时会查询token是否存在，如果不存在最后就会抛出BadTokenException。
+
 &emsp;&emsp;到这里问题好像是解释清楚了，可是Dialog中的token来自哪里呢？
 
 #### Dialog的token来自哪里
 
 ##### 倒推法跟踪token的来源
-&emsp;&emsp;Dialog也包含一个Window和WM对象，当Dialog show的时候最终会调用ViewRootImpl的setView方法（见【1】节崩溃堆栈），进而会调用WMS的addWindow方法，这个方法的WindowManager.LayoutParams类型的参数attrs中包含了一个token，WMS在mTokenMap中查询这个token是否存在，不存在就会抛出异常。这个attrs中的token来自哪里呢？
+&emsp;&emsp;Dialog也包含一个Window和WM对象，当Dialog show的时候最终会调用ViewRootImpl的setView方法（见【1】节崩溃堆栈），进而会调用WMS的addWindow方法，这个方法的WindowManager.LayoutParams类型的参数attrs中包含了一个token，WMS在mTokenMap中根据token.asBinder()返回值查询token（AppWindowToken对象）是否存在，不存在就会抛出异常。那这个attrs中的token来自哪里呢？
 
 &emsp;&emsp;从【1】中的崩溃栈可以看出，这个attrs可能来自于Dialog的show方法，改方法源码如下：
 
@@ -398,7 +399,7 @@ public void addView(@NonNull View view, @NonNull ViewGroup.LayoutParams params) 
         mGlobal.addView(view, params, mContext.getDisplay(), mParentWindow);
     }
 ```
-&emsp;&emsp;这个mParentWindow不是null，它其实是Activity对应的Window对象（这句很重要，圈起来要考），这个后面会解释。因此adjustLayoutParamsForSubWindow会被调用，该方法的源码如下：
+&emsp;&emsp;这个mParentWindow不是null，**它其实是Activity对应的Window对象**（这句很重要，圈起来要考），这个后面会解释。因此adjustLayoutParamsForSubWindow会被调用，该方法的源码如下：
 
 ```java
 void adjustLayoutParamsForSubWindow(WindowManager.LayoutParams wp) {
@@ -409,7 +410,7 @@ void adjustLayoutParamsForSubWindow(WindowManager.LayoutParams wp) {
 //省略部分代码
 }
 ```
-&emsp;&emsp;该方法根据wp的type不同对应不同的处理，对于Dialog来说，有用的代码就是上面贴出来的。根据前面的分析知道，wp的token就是null，mContainer也是为null，因此wp的token就被赋值为mAppToken。那个这个MAPPToken又是个啥呢？它是在Window类的源码的setWindowManager方法被赋值的。
+&emsp;&emsp;该方法根据参数wp的type不同对应不同的处理，对于Dialog来说，有用的代码就是上面贴出来的。根据前面的分析知道，wp的token就是null，mContainer一般也是为null，因此wp的token就被赋值为mAppToken。那个这个MAPPToken又是个啥呢？它是在Window类的源码的setWindowManager方法被赋值的。
 
 &emsp;&emsp;在Dialog的源码中可以看到Window对象调用setWindowManager方法时传入的token为null！WTF，感情前面一堆都白分析了？No！这篇文章中最精彩的部分马上就要来了。扶好扶手，马上要飙车了。
 
@@ -417,7 +418,7 @@ void adjustLayoutParamsForSubWindow(WindowManager.LayoutParams wp) {
 
 &emsp;&emsp;前面遇到了分析到最后token为null的尴尬。接下来就要实现华丽的逆转。
 
-&emsp;&emsp;还记得前面说过一个圈起来要考的重点吗？上面之所以分析到最后token为null，关键在于我们分析错了Window对象，其实我们调用的是parentWindow（即Activity）的adjustLayoutParamsForSubWindow方法，是否有点蒙圈？刚开始我也是的。
+&emsp;&emsp;还记得前面说过一个圈起来要考的重点吗？上面之所以分析到最后token为null，关键在于我们分析错了Window对象，其实我们调用的是parentWindow（即Activity）的adjustLayoutParamsForSubWindow方法，是否有点蒙圈？刚开始我也是的。接下来就好好分析这部分逻辑。
 
 &emsp;&emsp;把上面的分析先暂放一下，先看看Dialog构造方法的源码：
 
@@ -451,7 +452,7 @@ public Dialog(@NonNull Context context, @StyleRes int themeResId) {
         mListenersHandler = new ListenersHandler(this);
     }
 ```
-&emsp;&emsp;从上面的代码中可以看到，mWindowManager是通过context的getSystemService方法获得的，这个context是什么非常关键。一般情况下这个context都是一个Activity，因此可以看看Activity类中的getSystemService方法，源码如下：
+&emsp;&emsp;从上面的代码中可以看到，mWindowManager是通过context的getSystemService方法获得的，这个context是什么非常关键的。一般情况下这个context都是一个Activity，因此可以看看Activity类中的getSystemService方法，源码如下：
 
 ```java
 @Override
@@ -470,7 +471,7 @@ public Object getSystemService(@ServiceName @NonNull String name) {
         return super.getSystemService(name);
     }
 ```
-&emsp;&emsp;Activity重写了getSystemService，对应WMS的获取进行了拦截，直接返回了它自己的mWindowManager变量。它是在Activity的attach方法中被赋值的，见上面的代码。在Activity的attach方法中调用了Activity成员mWindow的setWindowManager方法，源码如下：
+&emsp;&emsp;Activity重写了getSystemService，对WMS的获取进行了拦截，直接返回了它自己的mWindowManager变量。它是在Activity的attach方法中被赋值的，见上面的代码。在Activity的attach方法中调用了Activity成员mWindow的setWindowManager方法，源码如下：
 
 ```java
 public void setWindowManager(WindowManager wm, IBinder appToken, String appName,
@@ -503,11 +504,10 @@ private WindowManagerImpl(Context context, Window parentWindow) {
 
 &emsp;&emsp;总结一下：
 
-1. Activity重写getSystemService，返回自己的mWindowManager。
-2. Activity的mWindowManager成员把Activity的mWindow保存在自己的mParentWindow成员中
-3. Activity的mWindow成员把Activity的mToken成员保存在自己的mAppToken中
-4. Dialog在构造中调用context的getSystemService返回一个WM对象
-5. Dialog在show方法调用4中返回的WM对象的addView方法
+1. Activity的attach方法中，通过其成员mWindow调用setWindowManager方法，在该方法中把Activity的mToken成员赋值给mAppToken，同时创建一个WindowManager对象，并把其自己（mWindow）赋值给WM对象的mParentWindow成员
+2. Activity的attach方法中，通过调用mWindow的getWindowManager方法返回WM对象，并赋值给Activity的mWindowManager成员
+3. 构造Dialog时把Activity当做context传进去，并调用context的getSystemService方法返回WM对象，注意，该WM对象即1中创建的WM对象
+5. Dialog在show方法调用3中返回的WM对象的addView方法
 6. WM对象接着调用WindowManagerGlobal的addView方法，并传进去WM对象的mParentWindow成员
 7. 在WindowManagerGlobal 的addView中调用parentWindow的adjustLayoutParamsForSubWindow，把parentWindow的mAppToken赋值给attrs的token属性，注意这个token是Activity的mToken。
 
@@ -523,6 +523,6 @@ private WindowManagerImpl(Context context, Window parentWindow) {
 
 ##### 为什么有些情况下Activity启动时按home键之后应用会崩溃
 
-&emsp;&emsp;按home键之后，系统会回到launcher界面，同时AMS会stop应用的Activity的，如果该Activity在manifest文件中设置了noHistory属性为true时，stop方法就会启动一个定时，超过10秒时Activity仍未执行完stop时AMS就会在server端执行finish操作，从而删除Activity对应的token，接下来就会发生和【2.5.2】相同的情况。之所以会超时，是因为在Application类或Activity的onCreate方法中执行的时间太久，当server端把token删除之后，client端的Activity才执行view的添加（即resume），这样就会发生BadTokenException。注意，虽然client端被卡主，但是server端（AMS）仍然能执行stop和finish操作，因为他们是两个进程。
+&emsp;&emsp;按home键之后，系统会回到launcher界面，同时AMS会stop应用的Activity的，如果该Activity在manifest文件中设置了noHistory属性为true，stop方法就会启动一个定时，超过10秒时Activity仍未执行完stop时AMS就会在server端执行finish操作，从而删除Activity对应的token，接下来就会发生和【2.5.2】相同的情况。之所以会超时，是因为在Application类或Activity的onCreate方法中执行的时间太久，当server端把token删除之后，client端的Activity才执行view的添加（即resume），这样就会发生BadTokenException。注意，虽然client端被卡主，但是server端（AMS）仍然能执行stop和finish操作，因为他们是两个进程。
 
 &emsp;&emsp;不过我们应用的首页Activity并没有设置noHistory属性，但是仍然在启动时跑出了BadTokenException，就显得很诡异，由于无法复现，暂时还未分析出原因。
