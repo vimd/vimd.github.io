@@ -1,0 +1,719 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="前言&amp;emsp;&amp;emsp;工作中遇到一个插件化版本在7.0设备上崩溃的问题，是由于找不到资源。不过资源刚开始肯定是存在的，因为应用的首页还是能进去的。经过一番测试发现只要进H5页面就会崩溃，因此初步怀疑和WebView有关。接下来就是一段Android源码之旅，最终发现了问题的原因，并找到了一个解决方案，但是不知道是否是最优的。 临近封板时的大bug&amp;emsp;&amp;emsp;应用的这个版本快封板时">
+<meta property="og:type" content="article">
+<meta property="og:title" content="插件化版本在7.0设备上崩溃分析">
+<meta property="og:url" content="https://vimd.github.io/2017/11/26/插件化版本在7-0设备上崩溃分析/index.html">
+<meta property="og:site_name" content="博客">
+<meta property="og:description" content="前言&amp;emsp;&amp;emsp;工作中遇到一个插件化版本在7.0设备上崩溃的问题，是由于找不到资源。不过资源刚开始肯定是存在的，因为应用的首页还是能进去的。经过一番测试发现只要进H5页面就会崩溃，因此初步怀疑和WebView有关。接下来就是一段Android源码之旅，最终发现了问题的原因，并找到了一个解决方案，但是不知道是否是最优的。 临近封板时的大bug&amp;emsp;&amp;emsp;应用的这个版本快封板时">
+<meta property="og:updated_time" content="2017-12-31T11:54:19.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="插件化版本在7.0设备上崩溃分析">
+<meta name="twitter:description" content="前言&amp;emsp;&amp;emsp;工作中遇到一个插件化版本在7.0设备上崩溃的问题，是由于找不到资源。不过资源刚开始肯定是存在的，因为应用的首页还是能进去的。经过一番测试发现只要进H5页面就会崩溃，因此初步怀疑和WebView有关。接下来就是一段Android源码之旅，最终发现了问题的原因，并找到了一个解决方案，但是不知道是否是最优的。 临近封板时的大bug&amp;emsp;&amp;emsp;应用的这个版本快封板时">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://vimd.github.io/2017/11/26/插件化版本在7-0设备上崩溃分析/"/>
+
+
+
+
+
+  <title> 插件化版本在7.0设备上崩溃分析 | 博客 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://vimd.github.io/2017/11/26/插件化版本在7-0设备上崩溃分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Liu Zhijun">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                插件化版本在7.0设备上崩溃分析
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-26T16:32:40+08:00">
+                2017-11-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>&emsp;&emsp;工作中遇到一个插件化版本在7.0设备上崩溃的问题，是由于找不到资源。不过资源刚开始肯定是存在的，因为应用的首页还是能进去的。经过一番测试发现只要进H5页面就会崩溃，因此初步怀疑和WebView有关。接下来就是一段Android源码之旅，最终发现了问题的原因，并找到了一个解决方案，但是不知道是否是最优的。</p>
+<h3 id="临近封板时的大bug"><a href="#临近封板时的大bug" class="headerlink" title="临近封板时的大bug"></a>临近封板时的大bug</h3><p>&emsp;&emsp;应用的这个版本快封板时突出出现了一个大bug，插件化版本在一个设备上进入H5页面崩溃。从log看是是Android7.0，问题是找不到插件apk中的资源。资源肯定是存在的，因为已经通过hook设进去了，而且不进H5的页面也不会有问题。于是就怀疑进入H5页面的时候Resources对象有变化，而H5页面最大的不同就是使用了WebView，于是就顺着这条路开始追查。<br><a id="more"></a></p>
+<h4 id="WebView的创建过程"><a href="#WebView的创建过程" class="headerlink" title="WebView的创建过程"></a>WebView的创建过程</h4><p>&emsp;&emsp;WebView的创建最终会调用下面这个构造方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="title">WebView</span><span class="params">(Context context, AttributeSet attrs, <span class="keyword">int</span> defStyleAttr, <span class="keyword">int</span> defStyleRes,</span></span></div><div class="line">            Map&lt;String, Object&gt; javaScriptInterfaces, <span class="keyword">boolean</span> privateBrowsing) &#123;</div><div class="line">        <span class="keyword">super</span>(context, attrs, defStyleAttr, defStyleRes);</div><div class="line">        <span class="keyword">if</span> (context == <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Invalid context argument"</span>);</div><div class="line">        &#125;</div><div class="line">        sEnforceThreadChecking = context.getApplicationInfo().targetSdkVersion &gt;=</div><div class="line">                Build.VERSION_CODES.JELLY_BEAN_MR2;</div><div class="line">        checkThread();</div><div class="line"></div><div class="line">        ensureProviderCreated();</div><div class="line">        mProvider.init(javaScriptInterfaces, privateBrowsing);</div><div class="line">        <span class="comment">// Post condition of creating a webview is the CookieSyncManager.getInstance() is allowed.</span></div><div class="line">        CookieSyncManager.setGetInstanceIsAllowed();</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>其中在ensureProviderCreated方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">ensureProviderCreated</span><span class="params">()</span> </span>&#123;</div><div class="line">        checkThread();</div><div class="line">        <span class="keyword">if</span> (mProvider == <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="comment">// As this can get called during the base class constructor chain, pass the minimum</span></div><div class="line">            <span class="comment">// number of dependencies here; the rest are deferred to init().</span></div><div class="line">            mProvider = getFactory().createWebView(<span class="keyword">this</span>, <span class="keyword">new</span> PrivateAccess());</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>&emsp;&emsp;getFactory方法中通过调用WebViewFactory对象的getProvider返回一个WebViewChromiumFactoryProvider对象，然后调用该对象的createWebView创建WebViewChromium对象（WebViewChromiumFactoryProvider和WebViewChromium类在<a href="http://androidxref.com/" target="_blank" rel="external">源码网站</a>上没有找到，所以不贴源码了）</p>
+<p>getProvider方法的源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">static</span> WebViewFactoryProvider <span class="title">getProvider</span><span class="params">()</span> </span>&#123;</div><div class="line"><span class="comment">//省略无关代码</span></div><div class="line">            <span class="keyword">try</span> &#123;</div><div class="line">                Class&lt;WebViewFactoryProvider&gt; providerClass = getProviderClass();</div><div class="line"></div><div class="line">                <span class="keyword">try</span> &#123;</div><div class="line">                    sProviderInstance = providerClass.getConstructor(WebViewDelegate.class)</div><div class="line">                            .newInstance(<span class="keyword">new</span> WebViewDelegate());</div><div class="line"></div><div class="line">                    <span class="keyword">return</span> sProviderInstance;</div><div class="line">                &#125;</div><div class="line"><span class="comment">//省略无关代码</span></div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>&emsp;&emsp;getProviderClass方法返回的就是com.android.webview.chromium.WebViewChromiumFactoryProvider对应的class，从getProvider方法可以看出，调用的是WebViewChromiumFactoryProvider类带有WebViewDelegate对象的构造方法，这个WebViewDelegate对象被保存在WebViewChromiumFactoryProvider对象中，当调用WebViewChromiumFactoryProvider对象的createWebView时会创建WebViewChromium对象，在WebViewChromium的构造方法中会调用WebViewDelegate的addWebViewAssetPath<br>方法。这个过程在7.0之前的源码中可以看到，只不过之前的代码没有WebViewDelegate这个类。</p>
+<p>&emsp;&emsp;至此，WebView的创建差不多结束了，但是这个似乎和要分析的问题毫无关系啊。因为最后的 一层薄纱还没有扒掉呢。</p>
+<h4 id="系统的偷梁换柱"><a href="#系统的偷梁换柱" class="headerlink" title="系统的偷梁换柱"></a>系统的偷梁换柱</h4><p>&emsp;&emsp;在创建WebView的过程中，系统会把浏览器apk添加到AssetManager中，在7.0中就是调用WebViewDelegate的addWebViewAssetPath。该方法源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addWebViewAssetPath</span><span class="params">(Context context)</span> </span>&#123;</div><div class="line">        <span class="keyword">final</span> String newAssetPath = WebViewFactory.getLoadedPackageInfo().applicationInfo.sourceDir;</div><div class="line"></div><div class="line">        <span class="keyword">final</span> ApplicationInfo appInfo = context.getApplicationInfo();</div><div class="line">        <span class="keyword">final</span> String[] libs = appInfo.sharedLibraryFiles;</div><div class="line">        <span class="keyword">if</span> (!ArrayUtils.contains(libs, newAssetPath)) &#123;</div><div class="line">            <span class="comment">// Build the new library asset path list.</span></div><div class="line">            <span class="keyword">final</span> <span class="keyword">int</span> newLibAssetsCount = <span class="number">1</span> + (libs != <span class="keyword">null</span> ? libs.length : <span class="number">0</span>);</div><div class="line">            <span class="keyword">final</span> String[] newLibAssets = <span class="keyword">new</span> String[newLibAssetsCount];</div><div class="line">            <span class="keyword">if</span> (libs != <span class="keyword">null</span>) &#123;</div><div class="line">                System.arraycopy(libs, <span class="number">0</span>, newLibAssets, <span class="number">0</span>, libs.length);</div><div class="line">            &#125;</div><div class="line">            newLibAssets[newLibAssetsCount - <span class="number">1</span>] = newAssetPath;</div><div class="line"></div><div class="line">            <span class="comment">// Update the ApplicationInfo object with the new list.</span></div><div class="line">            <span class="comment">// We know this will persist and future Resources created via ResourcesManager</span></div><div class="line">            <span class="comment">// will include the shared library because this ApplicationInfo comes from the</span></div><div class="line">            <span class="comment">// underlying LoadedApk in ContextImpl, which does not change during the life of the</span></div><div class="line">            <span class="comment">// application.</span></div><div class="line">            appInfo.sharedLibraryFiles = newLibAssets;</div><div class="line"></div><div class="line">            <span class="comment">// Update existing Resources with the WebView library.</span></div><div class="line">            ResourcesManager.getInstance().appendLibAssetForMainAssetPath(</div><div class="line">                    appInfo.getBaseResourcePath(), newAssetPath);</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>&emsp;&emsp;这个方法逻辑很简单，就是拿到WebView的apk路径，判断是否在当前ApplicationInfo的sharedLibraryFiles变量中，这个第一次调用时是不在的，所以会走到if中，把WebView的apk路径添加到sharedLibraryFiles变量中，然后调用ResourcesManager的appendLibAssetForMainAssetPath方法。下面看一下这个方法做了什么事情：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">appendLibAssetForMainAssetPath</span><span class="params">(String assetPath, String libAsset)</span> </span>&#123;</div><div class="line"><span class="number">850</span>        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</div><div class="line"><span class="number">851</span>            <span class="comment">// Record which ResourcesImpl need updating</span></div><div class="line"><span class="number">852</span>            <span class="comment">// (and what ResourcesKey they should update to).</span></div><div class="line"><span class="number">853</span>            <span class="keyword">final</span> ArrayMap&lt;ResourcesImpl, ResourcesKey&gt; updatedResourceKeys = <span class="keyword">new</span> ArrayMap&lt;&gt;();</div><div class="line"><span class="number">854</span></div><div class="line"><span class="number">855</span>            <span class="keyword">final</span> <span class="keyword">int</span> implCount = mResourceImpls.size();</div><div class="line"><span class="number">856</span>            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; implCount; i++) &#123;</div><div class="line"><span class="number">857</span>                <span class="keyword">final</span> ResourcesImpl impl = mResourceImpls.valueAt(i).get();</div><div class="line"><span class="number">858</span>                <span class="keyword">final</span> ResourcesKey key = mResourceImpls.keyAt(i);</div><div class="line"><span class="number">859</span>                <span class="keyword">if</span> (impl != <span class="keyword">null</span> &amp;&amp; key.mResDir.equals(assetPath)) &#123;</div><div class="line"><span class="number">860</span>                    <span class="keyword">if</span> (!ArrayUtils.contains(key.mLibDirs, libAsset)) &#123;</div><div class="line"><span class="number">861</span>                        <span class="keyword">final</span> <span class="keyword">int</span> newLibAssetCount = <span class="number">1</span> +</div><div class="line"><span class="number">862</span>                                (key.mLibDirs != <span class="keyword">null</span> ? key.mLibDirs.length : <span class="number">0</span>);</div><div class="line"><span class="number">863</span>                        <span class="keyword">final</span> String[] newLibAssets = <span class="keyword">new</span> String[newLibAssetCount];</div><div class="line"><span class="number">864</span>                        <span class="keyword">if</span> (key.mLibDirs != <span class="keyword">null</span>) &#123;</div><div class="line"><span class="number">865</span>                            System.arraycopy(key.mLibDirs, <span class="number">0</span>, newLibAssets, <span class="number">0</span>, key.mLibDirs.length);</div><div class="line"><span class="number">866</span>                        &#125;</div><div class="line"><span class="number">867</span>                        newLibAssets[newLibAssetCount - <span class="number">1</span>] = libAsset;</div><div class="line"><span class="number">868</span></div><div class="line"><span class="number">869</span>                        updatedResourceKeys.put(impl, <span class="keyword">new</span> ResourcesKey(</div><div class="line"><span class="number">870</span>                                key.mResDir,</div><div class="line"><span class="number">871</span>                                key.mSplitResDirs,</div><div class="line"><span class="number">872</span>                                key.mOverlayDirs,</div><div class="line"><span class="number">873</span>                                newLibAssets,</div><div class="line"><span class="number">874</span>                                key.mDisplayId,</div><div class="line"><span class="number">875</span>                                key.mOverrideConfiguration,</div><div class="line"><span class="number">876</span>                                key.mCompatInfo));</div><div class="line"><span class="number">877</span>                    &#125;</div><div class="line"><span class="number">878</span>                &#125;</div><div class="line"><span class="number">879</span>            &#125;</div><div class="line"><span class="number">880</span></div><div class="line"><span class="number">881</span>            <span class="comment">// Bail early if there is no work to do.</span></div><div class="line"><span class="number">882</span>            <span class="keyword">if</span> (updatedResourceKeys.isEmpty()) &#123;</div><div class="line"><span class="number">883</span>                <span class="keyword">return</span>;</div><div class="line"><span class="number">884</span>            &#125;</div><div class="line"><span class="number">885</span></div><div class="line"><span class="number">886</span>            <span class="comment">// Update any references to ResourcesImpl that require reloading.</span></div><div class="line"><span class="number">887</span>            <span class="keyword">final</span> <span class="keyword">int</span> resourcesCount = mResourceReferences.size();</div><div class="line"><span class="number">888</span>            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; resourcesCount; i++) &#123;</div><div class="line"><span class="number">889</span>                <span class="keyword">final</span> Resources r = mResourceReferences.get(i).get();</div><div class="line"><span class="number">890</span>                <span class="keyword">if</span> (r != <span class="keyword">null</span>) &#123;</div><div class="line"><span class="number">891</span>                    <span class="keyword">final</span> ResourcesKey key = updatedResourceKeys.get(r.getImpl());</div><div class="line"><span class="number">892</span>                    <span class="keyword">if</span> (key != <span class="keyword">null</span>) &#123;</div><div class="line"><span class="number">893</span>                        r.setImpl(findOrCreateResourcesImplForKeyLocked(key));</div><div class="line"><span class="number">894</span>                    &#125;</div><div class="line"><span class="number">895</span>                &#125;</div><div class="line"><span class="number">896</span>            &#125;</div><div class="line"><span class="number">897</span></div><div class="line"><span class="number">898</span>            <span class="comment">// Update any references to ResourcesImpl that require reloading for each Activity.</span></div><div class="line"><span class="number">899</span>            <span class="keyword">for</span> (ActivityResources activityResources : mActivityResourceReferences.values()) &#123;</div><div class="line"><span class="number">900</span>                <span class="keyword">final</span> <span class="keyword">int</span> resCount = activityResources.activityResources.size();</div><div class="line"><span class="number">901</span>                <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; resCount; i++) &#123;</div><div class="line"><span class="number">902</span>                    <span class="keyword">final</span> Resources r = activityResources.activityResources.get(i).get();</div><div class="line"><span class="number">903</span>                    <span class="keyword">if</span> (r != <span class="keyword">null</span>) &#123;</div><div class="line"><span class="number">904</span>                        <span class="keyword">final</span> ResourcesKey key = updatedResourceKeys.get(r.getImpl());</div><div class="line"><span class="number">905</span>                        <span class="keyword">if</span> (key != <span class="keyword">null</span>) &#123;</div><div class="line"><span class="number">906</span>                            r.setImpl(findOrCreateResourcesImplForKeyLocked(key));</div><div class="line"><span class="number">907</span>                        &#125;</div><div class="line"><span class="number">908</span>                    &#125;</div><div class="line"><span class="number">909</span>                &#125;</div><div class="line"><span class="number">910</span>            &#125;</div><div class="line"><span class="number">911</span>        &#125;</div><div class="line"><span class="number">912</span>    &#125;</div></pre></td></tr></table></figure>
+<p>&emsp;&emsp;这个方法首先遍历value值为ResourcesImpl对象的ArrayMap，找到map中当前应用对应的ResourcesImpl和ResourcesKey（ResourcesKey的mResDir对应是某个apk的路径，通过这个字段和当前应用的apk路径比较来判断）。找到之后就把ResourcesKey的mLibDirs字段和WebView apk组合在一起，然后再创建一个新的ResourcesKey。从39行开始就是去更新已经存在的Resources对象的ResourcesImpl成员变量，对应的代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="meta">@NonNull</span> <span class="function">ResourcesImpl <span class="title">findOrCreateResourcesImplForKeyLocked</span><span class="params">(</span></span></div><div class="line"><span class="number">342</span>            @NonNull ResourcesKey key) &#123;</div><div class="line"><span class="number">343</span>        ResourcesImpl impl = findResourcesImplForKeyLocked(key);</div><div class="line"><span class="number">344</span>        <span class="keyword">if</span> (impl == <span class="keyword">null</span>) &#123;</div><div class="line"><span class="number">345</span>            impl = createResourcesImpl(key);</div><div class="line"><span class="number">346</span>            mResourceImpls.put(key, <span class="keyword">new</span> WeakReference&lt;&gt;(impl));</div><div class="line"><span class="number">347</span>        &#125;</div><div class="line"><span class="number">348</span>        <span class="keyword">return</span> impl;</div><div class="line"><span class="number">349</span>    &#125;</div></pre></td></tr></table></figure>
+<p>&emsp;&emsp;先根据ResourcesKey查看是否存在对应的ResourcesImpl，如果存在就返回，否则就创建一个，查找的方法实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"> <span class="function"><span class="keyword">private</span> ResourcesImpl <span class="title">findResourcesImplForKeyLocked</span><span class="params">(@NonNull ResourcesKey key)</span> </span>&#123;</div><div class="line"><span class="number">327</span>        WeakReference&lt;ResourcesImpl&gt; weakImplRef = mResourceImpls.get(key);</div><div class="line"><span class="number">328</span>        ResourcesImpl impl = weakImplRef != <span class="keyword">null</span> ? weakImplRef.get() : <span class="keyword">null</span>;</div><div class="line"><span class="number">329</span>        <span class="keyword">if</span> (impl != <span class="keyword">null</span> &amp;&amp; impl.getAssets().isUpToDate()) &#123;</div><div class="line"><span class="number">330</span>            <span class="keyword">return</span> impl;</div><div class="line"><span class="number">331</span>        &#125;</div><div class="line"><span class="number">332</span>        <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line"><span class="number">333</span>    &#125;</div></pre></td></tr></table></figure>
+<p>&emsp;&emsp;其实就是遍历mResourceImpls，这个方法除了第一次调用情况下返回的是null，其他情况一般返回一个ResourcesImpl对象，但是对于第一次创建WebView走到这里时也会返回null，至于原因后面会说。因此findOrCreateResourcesImplForKeyLocked方法中就会调用createResourcesImpl方法，该方法源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="meta">@NonNull</span> <span class="function">ResourcesImpl <span class="title">createResourcesImpl</span><span class="params">(@NonNull ResourcesKey key)</span> </span>&#123;</div><div class="line"><span class="number">307</span>        <span class="keyword">final</span> DisplayAdjustments daj = <span class="keyword">new</span> DisplayAdjustments(key.mOverrideConfiguration);</div><div class="line"><span class="number">308</span>        daj.setCompatibilityInfo(key.mCompatInfo);</div><div class="line"><span class="number">309</span></div><div class="line"><span class="number">310</span>        <span class="keyword">final</span> AssetManager assets = createAssetManager(key);</div><div class="line"><span class="number">311</span>        <span class="keyword">final</span> DisplayMetrics dm = getDisplayMetrics(key.mDisplayId, daj);</div><div class="line"><span class="number">312</span>        <span class="keyword">final</span> Configuration config = generateConfig(key, dm);</div><div class="line"><span class="number">313</span>        <span class="keyword">final</span> ResourcesImpl impl = <span class="keyword">new</span> ResourcesImpl(assets, dm, config, daj);</div><div class="line"><span class="number">314</span>        <span class="keyword">if</span> (DEBUG) &#123;</div><div class="line"><span class="number">315</span>            Slog.d(TAG, <span class="string">"- creating impl="</span> + impl + <span class="string">" with key: "</span> + key);</div><div class="line"><span class="number">316</span>        &#125;</div><div class="line"><span class="number">317</span>        <span class="keyword">return</span> impl;</div><div class="line"><span class="number">318</span>    &#125;</div></pre></td></tr></table></figure>
+<p>&emsp;&emsp;该方法最核心的就是创建一个AssetManager，然后根据这个AssetManager创建一个ResourcesImpl，创建AssetManager的方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">protected</span> <span class="meta">@NonNull</span> <span class="function">AssetManager <span class="title">createAssetManager</span><span class="params">(@NonNull <span class="keyword">final</span> ResourcesKey key)</span> </span>&#123;</div><div class="line"><span class="number">246</span>        AssetManager assets = <span class="keyword">new</span> AssetManager();</div><div class="line"><span class="number">247</span></div><div class="line"><span class="number">248</span>        <span class="comment">// resDir can be null if the 'android' package is creating a new Resources object.</span></div><div class="line"><span class="number">249</span>        <span class="comment">// This is fine, since each AssetManager automatically loads the 'android' package</span></div><div class="line"><span class="number">250</span>        <span class="comment">// already.</span></div><div class="line"><span class="number">251</span>        <span class="keyword">if</span> (key.mResDir != <span class="keyword">null</span>) &#123;</div><div class="line"><span class="number">252</span>            <span class="keyword">if</span> (assets.addAssetPath(key.mResDir) == <span class="number">0</span>) &#123;</div><div class="line"><span class="number">253</span>                <span class="keyword">throw</span> <span class="keyword">new</span> Resources.NotFoundException(<span class="string">"failed to add asset path "</span> + key.mResDir);</div><div class="line"><span class="number">254</span>            &#125;</div><div class="line"><span class="number">255</span>        &#125;</div><div class="line"><span class="number">256</span></div><div class="line"><span class="number">257</span>        <span class="keyword">if</span> (key.mSplitResDirs != <span class="keyword">null</span>) &#123;</div><div class="line"><span class="number">258</span>            <span class="keyword">for</span> (<span class="keyword">final</span> String splitResDir : key.mSplitResDirs) &#123;</div><div class="line"><span class="number">259</span>                <span class="keyword">if</span> (assets.addAssetPath(splitResDir) == <span class="number">0</span>) &#123;</div><div class="line"><span class="number">260</span>                    <span class="keyword">throw</span> <span class="keyword">new</span> Resources.NotFoundException(</div><div class="line"><span class="number">261</span>                            <span class="string">"failed to add split asset path "</span> + splitResDir);</div><div class="line"><span class="number">262</span>                &#125;</div><div class="line"><span class="number">263</span>            &#125;</div><div class="line"><span class="number">264</span>        &#125;</div><div class="line"><span class="number">265</span></div><div class="line"><span class="number">266</span>        <span class="keyword">if</span> (key.mOverlayDirs != <span class="keyword">null</span>) &#123;</div><div class="line"><span class="number">267</span>            <span class="keyword">for</span> (<span class="keyword">final</span> String idmapPath : key.mOverlayDirs) &#123;</div><div class="line"><span class="number">268</span>                assets.addOverlayPath(idmapPath);</div><div class="line"><span class="number">269</span>            &#125;</div><div class="line"><span class="number">270</span>        &#125;</div><div class="line"><span class="number">271</span></div><div class="line"><span class="number">272</span>        <span class="keyword">if</span> (key.mLibDirs != <span class="keyword">null</span>) &#123;</div><div class="line"><span class="number">273</span>            <span class="keyword">for</span> (<span class="keyword">final</span> String libDir : key.mLibDirs) &#123;</div><div class="line"><span class="number">274</span>                <span class="keyword">if</span> (libDir.endsWith(<span class="string">".apk"</span>)) &#123;</div><div class="line"><span class="number">275</span>                    <span class="comment">// Avoid opening files we know do not have resources,</span></div><div class="line"><span class="number">276</span>                    <span class="comment">// like code-only .jar files.</span></div><div class="line"><span class="number">277</span>                    <span class="keyword">if</span> (assets.addAssetPathAsSharedLibrary(libDir) == <span class="number">0</span>) &#123;</div><div class="line"><span class="number">278</span>                        Log.w(TAG, <span class="string">"Asset path '"</span> + libDir +</div><div class="line"><span class="number">279</span>                                <span class="string">"' does not exist or contains no resources."</span>);</div><div class="line"><span class="number">280</span>                    &#125;</div><div class="line"><span class="number">281</span>                &#125;</div><div class="line"><span class="number">282</span>            &#125;</div><div class="line"><span class="number">283</span>        &#125;</div><div class="line"><span class="number">284</span>        <span class="keyword">return</span> assets;</div><div class="line"><span class="number">285</span>    &#125;</div></pre></td></tr></table></figure>
+<p>&emsp;&emsp;这个方法逻辑很简单，就是new一个AssetManager，然后把ResourcesKey对象中各个成员变量中的apk路径添加到AssetManager对象中，然后返回，通过层层返回到appendLibAssetForMainAssetPath中，可以看到所有相关的Resouces对象的ResourcesImpl成员都被修改成一个新创建的对象，该对象的AssetManager对象也是新创建的，它只管理了当前apk（mResDir）和mLibDirs中的apk，那么，对于我们的插件化机制来说是有问题的，因为应用启动时我们hook系统方法添加的插件apk现在都不在AssetManager中了，这样使用相关资源时就出现了ResourceNotFoundException异常。</p>
+<p>&emsp;&emsp;<strong>对上面的分析过程总结一下：</strong></p>
+<ol>
+<li>创建WebView时最终会调用WebViewDelegate的addWebViewAssetPath方法</li>
+<li>在addWebViewAssetPath方法中会判断WebView apk是否在applicationInfo的sharedLibraryFiles变量中，第一次调用该方法时是不在其中的</li>
+<li>由于2中返回为false，所以调用ResourcesManager的appendLibAssetForMainAssetPath方法，该方法中会创建新的ResourcesKey，然后根据这个ResourcesKey创建新的ResourcesImpl和AssetManager，把新的ResourcesImpl对象设置到Resources对象中，从而间接替换掉AssetManager对象。</li>
+</ol>
+<h4 id="关于Resources对象"><a href="#关于Resources对象" class="headerlink" title="关于Resources对象"></a>关于Resources对象</h4><p>&emsp;&emsp;前面分析findResourcesImplForKeyLocked方法时说它返回null，可是为什么呢？</p>
+<p>&emsp;&emsp;我刚接触Android时看到网上说一个应用只有一个Resources对象，做为菜鸟，我没有深入去分析，只是被动接受了。通过打印不同的Context对象的getResources返回对象的hasCode，也间接印证了前面的说法。如果追踪getResources方法，会发现最终都会调用ResourcesManager的getResources方法（7.0之前是getTopLevelResources方法），该方法会创建一个ResourcesKey，然后调用findResourcesImplForKeyLocked方法，根据这个key到ArrayMap中查找是否存在ResourcesImpl对象，在第一次调用时，mResourceImpls为空，所以返回null，之后会创建一个ResourcesImpl对象，并把key和这个ResourcesImpl对象put到mResourceImpls中。之后再调用ResourcesManager的getResources时，由于ResourcesKey相同（可以看这个类的equals方法，ArrayMap的get方法会调用key的equals方法判断两个对象是否相同，希望到这个地方你能理解为什么前面一节分析的时候说findResourcesImplForKeyLocked返回的是null），所以会返回第一次创建的ResourcesImpl对象（这里吧ResourcesImpl和Resources等价了，因为Resources是对ResourcesImpl的封装）。这就是为什么网上很多人说一个应用只有一个Resources对象。</p>
+<p>&emsp;&emsp;可是ResourcesManager既然是用ArrayMap管理Resources，那说明一个应用中的Resources对象有时不止一个，什么情况下会出现这种情况呢？嗯，其实这篇文章在分析的这个情况就是（只限于7.0及之后，这也是为什么7.0之前的版本我们没有遇到问题，那个时候是直接调用AssetManager的addAssetPath方法直接把WebView apk添加进去，而不会创建新的）。除此之外，还有一个情况在7.0之前的版本也会有多个Resources对象，就是sharedUserId，在manifest文件设置此属性后，就可以让两个apk运行在一个进程中，此时对于两个apk都会有一个Resources对象（因为ResourcesKey中的mResDir表示apk路径，在调用ResourcesManager的getResources时由于ResoucesKey不同，所以会创建两个ResourcesImpl对象）。</p>
+<h3 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h3><p>&emsp;&emsp;问题找到了，如何解决呢？刚开始时是给ApplicationInfo对象的sharedLibraryFiles添加WebView apk路径，让addWebViewAssetPath方法中的判断为true，这样就不会创建新的Resources对象了。但是这样改完会有一个潜在的问题：由于ApplicationContext中的Resources对象创建的比较早（甚至在Application之前)，在应用中没有时机在第一个Resources创建之前就修改sharedLibraryFiles，所以对于ApplicationContext来说，getResources返回的Resources是没有包含WebView apk路径的，这样如果使用ApplicationContext的getResources返回的对象获取某些资源时会出现找不到的情况。</p>
+<p>&emsp;&emsp;因此，首先要找一个尽可能早的时机来修改sharedLibraryFiles，之后又两个方案来修改ApplicationContext中的Resources对象：</p>
+<ol>
+<li>通过把ApplicationContext对象的成员变量mBase和mPackageInfo的mResources设置成null，然后再反射调用mPackageInfo的getResources方法，把返回的对象设置给mBase，这样就可以让ApplicationContext的getResources方法返回的对象能管理WebView apk了，具体可以查看源码，比较简单。</li>
+<li>上面一个方案的缺点是会多创建一个Resources对象，另一个方案就是在原来的Resources对象上就像修改，最重要的是修改ResourcesKey的mHash和mLibDirs。由于这样hook的地方比较多，尤其是mHash的生成算法，兼容性会比较差，因此最后还是选择了方案1.</li>
+</ol>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/12/诡异的BadTokenException/" rel="next" title="诡异的BadTokenException">
+                <i class="fa fa-chevron-left"></i> 诡异的BadTokenException
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="Liu Zhijun" />
+          <p class="site-author-name" itemprop="name">Liu Zhijun</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#临近封板时的大bug"><span class="nav-number">2.</span> <span class="nav-text">临近封板时的大bug</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#WebView的创建过程"><span class="nav-number">2.1.</span> <span class="nav-text">WebView的创建过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#系统的偷梁换柱"><span class="nav-number">2.2.</span> <span class="nav-text">系统的偷梁换柱</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#关于Resources对象"><span class="nav-number">2.3.</span> <span class="nav-text">关于Resources对象</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#解决方案"><span class="nav-number">3.</span> <span class="nav-text">解决方案</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Liu Zhijun</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
